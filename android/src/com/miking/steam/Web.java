@@ -10,7 +10,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 final class Web {
-    static final String START = "https://store.steampowered.com/?l=schinese";
+    static final String START = "https://store.steampowered.com/";
 
     private static final String INJECT_JS =
             "(function(){try{" +

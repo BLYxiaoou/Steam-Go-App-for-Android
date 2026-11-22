@@ -47,8 +47,8 @@ fi
 echo "[8/8] sign"
 "$BT/apksigner" sign --ks "$ROOT/debug.keystore" --ks-pass pass:android --key-pass pass:android \
   --v4-signing-enabled false \
-  --out "$ROOT/SteamGo-2.6.3.apk" "$OUT/aligned.apk"
+  --out "$ROOT/SteamGo-2.6.4.apk" "$OUT/aligned.apk"
 
 echo "--- verify ---"
-"$BT/apksigner" verify --print-certs "$ROOT/SteamGo-2.6.3.apk"
-echo "APK: $ROOT/SteamGo-2.6.3.apk"
+"$BT/apksigner" verify --print-certs "$ROOT/SteamGo-2.6.4.apk"
+echo "APK: $ROOT/SteamGo-2.6.4.apk"

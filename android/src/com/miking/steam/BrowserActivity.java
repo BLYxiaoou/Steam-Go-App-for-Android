@@ -321,6 +321,7 @@ public class BrowserActivity extends Activity {
         retry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                autoRetries = 0;
                 hideError();
                 webView.reload();
             }
@@ -370,10 +371,11 @@ public class BrowserActivity extends Activity {
 
     private void handleLoadError(int errorCode, String description) {
         if (errorCode == WebViewClient.ERROR_UNKNOWN
+                || errorCode == -3
                 || (description != null && description.contains("ERR_ABORTED"))) {
             return;
         }
-        if (autoRetries < 2) {
+        if (autoRetries < 3) {
             autoRetries++;
             if (!retryScheduled) {
                 retryScheduled = true;
@@ -384,7 +386,7 @@ public class BrowserActivity extends Activity {
                         hideError();
                         webView.reload();
                     }
-                }, 800L);
+                }, 900L * autoRetries);
             }
             return;
         }

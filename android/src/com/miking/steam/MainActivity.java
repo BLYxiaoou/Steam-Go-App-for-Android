@@ -7,6 +7,10 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -44,6 +48,7 @@ public class MainActivity extends Activity {
     private boolean edgeTracking;
     private int autoRetries;
     private boolean retryScheduled;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +91,7 @@ public class MainActivity extends Activity {
         });
 
         setupWebView();
+        registerNetworkRetry();
         webView.loadUrl(Web.START);
     }
 
@@ -101,6 +107,54 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         Web.persistCookies();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (networkCallback != null) {
+            try {
+                ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    cm.unregisterNetworkCallback(networkCallback);
+                }
+            } catch (Throwable ignored) {
+            }
+            networkCallback = null;
+        }
+        super.onDestroy();
+    }
+
+    private void registerNetworkRetry() {
+        if (networkCallback != null) {
+            return;
+        }
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) {
+                return;
+            }
+            networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(Network network) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (errorView != null && errorView.getVisibility() == View.VISIBLE) {
+                                autoRetries = 0;
+                                hideError();
+                                webView.reload();
+                            }
+                        }
+                    });
+                }
+            };
+            NetworkRequest request = new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                    .build();
+            cm.registerNetworkCallback(request, networkCallback);
+        } catch (Throwable ignored) {
+            networkCallback = null;
+        }
     }
 
     private LinearLayout buildContent() {
@@ -156,6 +210,7 @@ public class MainActivity extends Activity {
         retry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                autoRetries = 0;
                 hideError();
                 webView.reload();
             }
@@ -186,10 +241,11 @@ public class MainActivity extends Activity {
         // load is reported as ERR_ABORTED / ERROR_UNKNOWN even though the
         // redirected page is loading fine, so never treat it as a failure.
         if (errorCode == WebViewClient.ERROR_UNKNOWN
+                || errorCode == -3
                 || (description != null && description.contains("ERR_ABORTED"))) {
             return;
         }
-        if (autoRetries < 2) {
+        if (autoRetries < 3) {
             autoRetries++;
             if (!retryScheduled) {
                 retryScheduled = true;
@@ -200,7 +256,7 @@ public class MainActivity extends Activity {
                         hideError();
                         webView.reload();
                     }
-                }, 800L);
+                }, 900L * autoRetries);
             }
             return;
         }
@@ -227,6 +283,15 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         tp.leftMargin = Ui.dp(this, 4);
         bar.addView(title, tp);
+
+        bar.addView(Ui.actionButton(this, R.drawable.ic_refresh, Ui.TEXT, new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                autoRetries = 0;
+                hideError();
+                webView.reload();
+            }
+        }));
 
         bar.addView(Ui.actionButton(this, R.drawable.ic_notifications, Ui.TEXT, new View.OnClickListener() {
             @Override
