@@ -24,7 +24,8 @@ final class Web {
     private static final String INJECT_JS =
             "(function(){try{" +
             "var sels=['.responsive_header','.responsive_page_menu_ctn mainmenu','#store_nav_area'," +
-            "'.continue_shopping_ctn','#global_header','.responsive_page_header'];" +
+            "'.continue_shopping_ctn','#global_header','.responsive_page_header','.community_header'," +
+            "'.responsive_page_content_overlay'];" +
             "for(var i=0;i<sels.length;i++){var n=document.querySelectorAll(sels[i]);" +
             "for(var j=0;j<n.length;j++){n[j].style.display='none';}}" +
             "var c=document.getElementsByClassName('responsive_page_content');" +

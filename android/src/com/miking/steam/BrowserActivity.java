@@ -827,12 +827,24 @@ public class BrowserActivity extends Activity {
             }
 
             @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                Web.inject(view);
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
                 if (!errorInThisLoad) {
                     autoRetries = 0;
                 }
                 Web.inject(view);
+                final WebView target = view;
+                view.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Web.inject(target);
+                    }
+                }, 500);
             }
 
             @Override
