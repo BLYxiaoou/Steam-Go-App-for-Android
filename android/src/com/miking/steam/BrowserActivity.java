@@ -802,6 +802,13 @@ public class BrowserActivity extends Activity {
 
     private void setupWebView() {
         Web.setup(webView);
+        // Community pages ship a desktop two-column layout unless the viewport
+        // is narrow. Forcing the layout width to the device width gives the
+        // responsive CSS a mobile-sized viewport instead of squeezing 980px.
+        if (MODE_COMMUNITY.equals(mode) || MODE_WORKSHOP.equals(mode)) {
+            webView.getSettings().setUseWideViewPort(false);
+            webView.getSettings().setLoadWithOverviewMode(false);
+        }
         if (MODE_FRIENDS.equals(mode)) {
             try {
                 String ua = webView.getSettings().getUserAgentString();

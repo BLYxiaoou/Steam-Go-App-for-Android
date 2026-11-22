@@ -43,7 +43,7 @@ public class AboutActivity extends Activity {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             version = info.versionName;
         } catch (Exception e) {
-            version = "2.6.4";
+            version = "2.6.5";
         }
 
         LinearLayout root = new LinearLayout(this);
