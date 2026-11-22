@@ -37,6 +37,7 @@ public class BrowserActivity extends Activity {
     private static final String MODE_COMMUNITY = "community";
     private static final String MODE_DISCOUNTED = "discounted";
     private static final String MODE_FRIENDS = "friends";
+    private static final String MODE_WORKSHOP = "workshop";
 
     static void openUniversal(Activity activity, String url) {
         Intent i = new Intent(activity, BrowserActivity.class);
@@ -69,6 +70,19 @@ public class BrowserActivity extends Activity {
         activity.startActivity(i);
     }
 
+    static void openWorkshop(Activity activity) {
+        Intent i = new Intent(activity, BrowserActivity.class);
+        i.putExtra(EXTRA_MODE, MODE_WORKSHOP);
+        activity.startActivity(i);
+    }
+
+    static void openWorkshop(Activity activity, String url) {
+        Intent i = new Intent(activity, BrowserActivity.class);
+        i.putExtra(EXTRA_MODE, MODE_WORKSHOP);
+        i.putExtra(EXTRA_URL, url);
+        activity.startActivity(i);
+    }
+
     private static final String[][] STORE_TABS = {
             {"精选", "https://store.steampowered.com"},
             {"探索", "https://store.steampowered.com/explore/"},
@@ -89,6 +103,34 @@ public class BrowserActivity extends Activity {
             {"周期特惠", "https://store.steampowered.com/search/?filter=weeklongdeals"},
             {"低于40\u00A5", "https://store.steampowered.com/search/?filter=ut1&category1=998&os="},
             {"低于20\u00A5", "https://store.steampowered.com/search/?filter=ut2&category1=998&os="},
+    };
+
+    private static final String[][] WORKSHOP_TABS = {
+            {"热门", "https://steamcommunity.com/workshop/browse/?browsesort=trend&section=readytouseitems"},
+            {"最新", "https://steamcommunity.com/workshop/browse/?browsesort=mostrecent&section=readytouseitems"},
+            {"我的订阅", "https://steamcommunity.com/my/subscribedworkshopitems"},
+            {"我的收藏", "https://steamcommunity.com/my/favorites/"},
+            {"我的作品", "https://steamcommunity.com/my/workshopfiles/"},
+    };
+
+    private static final String[][] WORKSHOP_CATEGORIES = {
+            {"创意工坊首页", "https://steamcommunity.com/workshop/"},
+            {"Wallpaper Engine", "https://steamcommunity.com/app/431960/workshop/"},
+            {"反恐精英 2", "https://steamcommunity.com/app/730/workshop/"},
+            {"Dota 2", "https://steamcommunity.com/app/570/workshop/"},
+            {"绝地求生", "https://steamcommunity.com/app/578080/workshop/"},
+            {"求生之路 2", "https://steamcommunity.com/app/550/workshop/"},
+            {"盖瑞模组", "https://steamcommunity.com/app/4000/workshop/"},
+            {"泰拉瑞亚", "https://steamcommunity.com/app/105600/workshop/"},
+            {"城市：天际线", "https://steamcommunity.com/app/255710/workshop/"},
+            {"环世界", "https://steamcommunity.com/app/294100/workshop/"},
+            {"群星", "https://steamcommunity.com/app/281990/workshop/"},
+            {"方舟：生存进化", "https://steamcommunity.com/app/346110/workshop/"},
+            {"上古卷轴 5：天际", "https://steamcommunity.com/app/489830/workshop/"},
+            {"辐射 4", "https://steamcommunity.com/app/377160/workshop/"},
+            {"欧洲卡车模拟 2", "https://steamcommunity.com/app/227300/workshop/"},
+            {"饥荒联机版", "https://steamcommunity.com/app/322330/workshop/"},
+            {"无人深空", "https://steamcommunity.com/app/275850/workshop/"},
     };
 
     private static final String[][] STORE_CATEGORIES = {
@@ -211,7 +253,7 @@ public class BrowserActivity extends Activity {
 
         root.addView(content, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        if (MODE_STORE.equals(mode)) {
+        if (MODE_STORE.equals(mode) || MODE_WORKSHOP.equals(mode)) {
             scrim = new View(this);
             scrim.setBackgroundColor(0x99000000);
             scrim.setVisibility(View.GONE);
@@ -224,7 +266,7 @@ public class BrowserActivity extends Activity {
             });
             root.addView(scrim, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-            drawer = buildDrawer(STORE_CATEGORIES);
+            drawer = buildDrawer(MODE_STORE.equals(mode) ? STORE_CATEGORIES : WORKSHOP_CATEGORIES);
             root.addView(drawer, drawerParams());
         }
 
@@ -359,6 +401,9 @@ public class BrowserActivity extends Activity {
         if (MODE_DISCOUNTED.equals(mode)) {
             return DISCOUNT_TABS;
         }
+        if (MODE_WORKSHOP.equals(mode)) {
+            return WORKSHOP_TABS;
+        }
         return null;
     }
 
@@ -374,6 +419,9 @@ public class BrowserActivity extends Activity {
         }
         if (MODE_FRIENDS.equals(mode)) {
             return "Steam \u597d\u53cb";
+        }
+        if (MODE_WORKSHOP.equals(mode)) {
+            return "\u521b\u610f\u5de5\u574a";
         }
         return "\u6b63\u5728\u52a0\u8f7d...";
     }
@@ -396,9 +444,18 @@ public class BrowserActivity extends Activity {
             }
         }));
 
-        if (MODE_STORE.equals(mode)) {
+        if (MODE_WORKSHOP.equals(mode)) {
+            bar.addView(Ui.actionButton(this, R.drawable.ic_menu, Ui.TEXT, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setDrawer(!drawerOpen);
+                }
+            }));
+        }
+
+        if (MODE_STORE.equals(mode) || MODE_WORKSHOP.equals(mode)) {
             searchView = new EditText(this);
-            searchView.setHint("\u641c\u7d22\u5546\u5e97");
+            searchView.setHint(MODE_WORKSHOP.equals(mode) ? "\u641c\u7d22\u521b\u610f\u5de5\u574a" : "\u641c\u7d22\u5546\u5e97");
             searchView.setTextSize(14);
             searchView.setTextColor(Ui.TEXT_DIM);
             searchView.setHintTextColor(0xFF79747E);
@@ -433,7 +490,7 @@ public class BrowserActivity extends Activity {
             bar.addView(titleView, tp);
         }
 
-        if (MODE_STORE.equals(mode)) {
+        if (MODE_STORE.equals(mode) || MODE_WORKSHOP.equals(mode)) {
             bar.addView(Ui.actionButton(this, R.drawable.ic_refresh, Ui.TEXT, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -536,7 +593,7 @@ public class BrowserActivity extends Activity {
         list.setOrientation(LinearLayout.VERTICAL);
         list.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 12));
 
-        TextView header = Ui.text(this, "商店分类", 18, Ui.TEXT);
+        TextView header = Ui.text(this, MODE_WORKSHOP.equals(mode) ? "热门游戏工坊" : "商店分类", 18, Ui.TEXT);
         header.setTypeface(Ui.medium());
         header.setPadding(Ui.dp(this, 24), Ui.dp(this, 16), Ui.dp(this, 24), Ui.dp(this, 8));
         list.addView(header);
@@ -545,7 +602,9 @@ public class BrowserActivity extends Activity {
         for (int i = 0; i < items.length; i++) {
             final String url = items[i][1];
             int iconRes = 0;
-            if (i < STORE_CATEGORY_ICONS.length) {
+            if (MODE_WORKSHOP.equals(mode)) {
+                iconRes = R.drawable.ic_extension_black_48dp;
+            } else if (i < STORE_CATEGORY_ICONS.length) {
                 iconRes = getResources().getIdentifier(STORE_CATEGORY_ICONS[i], "drawable", getPackageName());
             }
             LinearLayout row = Ui.drawerRow(this, iconRes, Ui.TEXT_DIM, items[i][0], Ui.TEXT, new View.OnClickListener() {
@@ -576,7 +635,11 @@ public class BrowserActivity extends Activity {
             return;
         }
         clearTabSelection();
-        webView.loadUrl("https://store.steampowered.com/search/?term=" + Uri.encode(term));
+        if (MODE_WORKSHOP.equals(mode)) {
+            webView.loadUrl("https://steamcommunity.com/workshop/browse/?searchtext=" + Uri.encode(term));
+        } else {
+            webView.loadUrl("https://store.steampowered.com/search/?term=" + Uri.encode(term));
+        }
         searchView.clearFocus();
         android.view.inputmethod.InputMethodManager imm =
                 (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -606,6 +669,24 @@ public class BrowserActivity extends Activity {
                             load("https://store.steampowered.com/search/?specials=1&os=linux"))
                     .setPositiveButton("\u67e5\u770b\u5305\u542bmacOS\u5e73\u53f0\u7684\u4f18\u60e0",
                             load("https://store.steampowered.com/search/?specials=1&os=mac"))
+                    .show();
+        } else if (MODE_WORKSHOP.equals(mode)) {
+            dialog.setTitle("\u521b\u610f\u5de5\u574a")
+                    .setNegativeButton("\u521b\u610f\u5de5\u574a\u9996\u9875", load("https://steamcommunity.com/workshop/"))
+                    .setNeutralButton("\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00", new Md3Dialog.Action() {
+                        @Override
+                        public void run() {
+                            String current = webView.getUrl();
+                            Ui.openExternal(BrowserActivity.this,
+                                    current == null ? "https://steamcommunity.com/workshop/" : current);
+                        }
+                    })
+                    .setPositiveButton("\u5237\u65b0", new Md3Dialog.Action() {
+                        @Override
+                        public void run() {
+                            webView.reload();
+                        }
+                    })
                     .show();
         } else if (MODE_FRIENDS.equals(mode)) {
             dialog.setTitle("\u66f4\u591a\u9009\u9879")
@@ -667,6 +748,9 @@ public class BrowserActivity extends Activity {
         } else if (MODE_DISCOUNTED.equals(mode)) {
             selectTab(0, false);
             url = DISCOUNT_TABS[0][1];
+        } else if (MODE_WORKSHOP.equals(mode)) {
+            selectTab(0, false);
+            url = (startUrl != null && startUrl.length() > 0) ? startUrl : WORKSHOP_TABS[0][1];
         } else if (MODE_FRIENDS.equals(mode)) {
             url = "https://steamcommunity.com/friends/";
         } else {

@@ -108,6 +108,18 @@ final class Web {
             return true;
         }
 
+        if (url.contains("steamcommunity.com/app/") && url.contains("/workshop")) {
+            BrowserActivity.openWorkshop(activity, url);
+            return true;
+        }
+
+        if (url.contains("steamcommunity.com/workshop")
+                || url.contains("steamcommunity.com/my/subscribedworkshopitems")
+                || url.contains("steamcommunity.com/my/workshopfiles")) {
+            BrowserActivity.openWorkshop(activity, url);
+            return true;
+        }
+
         if (url.contains("steamcommunity.com") || url.contains("help.steampowered.com")) {
             BrowserActivity.openUniversal(activity, url);
             return true;

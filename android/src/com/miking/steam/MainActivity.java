@@ -300,6 +300,12 @@ public class MainActivity extends Activity {
                 BrowserActivity.openCommunity(MainActivity.this);
             }
         });
+        addDrawerItem(list, R.drawable.ic_extension_black_48dp, "创意工坊", new Runnable() {
+            public void run() {
+                communityToast();
+                BrowserActivity.openWorkshop(MainActivity.this);
+            }
+        });
         addDrawerItem(list, R.drawable.ic_face, "我的资料", new Runnable() {
             public void run() {
                 communityToast();
