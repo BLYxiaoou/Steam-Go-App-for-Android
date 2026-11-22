@@ -2,11 +2,14 @@ package com.miking.steam;
 
 import android.app.Activity;
 import android.content.pm.PackageInfo;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -14,6 +17,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class SettingsActivity extends Activity {
+    private static final int[] ACCENTS = {
+            Ui.ACCENT_BLUE, Ui.ACCENT_PURPLE, Ui.ACCENT_GREEN,
+            Ui.ACCENT_ORANGE, Ui.ACCENT_PINK, Ui.ACCENT_DYNAMIC
+    };
+
     private LinearLayout list;
     private int themeModeAtCreate;
 
@@ -40,6 +48,7 @@ public class SettingsActivity extends Activity {
                 showThemeDialog();
             }
         });
+        addColorChips();
 
         addSection("数据");
         addRow(R.drawable.ic_refresh, "清除网页缓存", "不会退出 Steam 登录", new Runnable() {
@@ -142,6 +151,57 @@ public class SettingsActivity extends Activity {
             }
         });
         list.addView(row);
+    }
+
+    private void addColorChips() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(Ui.dp(this, 24), Ui.dp(this, 2), Ui.dp(this, 16), Ui.dp(this, 10));
+
+        TextView label = Ui.text(this, "强调色 · " + Ui.accentName(this), 14, Ui.TEXT_DIM);
+        box.addView(label);
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        for (final int accent : ACCENTS) {
+            boolean selected = Ui.getAccent(this) == accent;
+            boolean unavailable = accent == Ui.ACCENT_DYNAMIC && Build.VERSION.SDK_INT < 31;
+
+            FrameLayout chip = new FrameLayout(this);
+            GradientDrawable bg = new GradientDrawable();
+            bg.setShape(GradientDrawable.OVAL);
+            bg.setColor(Ui.accentSwatch(this, accent));
+            if (selected) {
+                bg.setStroke(Ui.dp(this, 3), Ui.TEXT);
+            } else {
+                bg.setStroke(Ui.dp(this, 1), 0x33000000);
+            }
+            chip.setBackground(new android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(0x33FFFFFF), bg, bg));
+            chip.setClickable(true);
+            chip.setAlpha(unavailable ? 0.35f : 1f);
+
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
+            lp.rightMargin = Ui.dp(this, 12);
+            lp.topMargin = Ui.dp(this, 12);
+            chip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (accent == Ui.ACCENT_DYNAMIC && Build.VERSION.SDK_INT < 31) {
+                        Toast.makeText(SettingsActivity.this,
+                                "动态取色需要 Android 12 及以上", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    Ui.setAccent(SettingsActivity.this, accent);
+                    recreate();
+                }
+            });
+            row.addView(chip, lp);
+        }
+        box.addView(row);
+        list.addView(box);
     }
 
     private void showThemeDialog() {

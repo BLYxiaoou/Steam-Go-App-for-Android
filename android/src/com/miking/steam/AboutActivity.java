@@ -31,11 +31,13 @@ public class AboutActivity extends Activity {
 
     private String version = "";
     private int themeModeAtCreate;
+    private int accentAtCreate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         themeModeAtCreate = Ui.getThemeMode(this);
+        accentAtCreate = Ui.getAccent(this);
         Ui.applyTheme(this);
         try {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -67,7 +69,7 @@ public class AboutActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+        if (themeModeAtCreate != Ui.getThemeMode(this) || accentAtCreate != Ui.getAccent(this)) {
             recreate();
         }
     }

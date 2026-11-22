@@ -196,6 +196,7 @@ public class BrowserActivity extends Activity {
     private EditText searchView;
     private View errorView;
     private int themeModeAtCreate;
+    private int accentAtCreate;
 
     private View scrim;
     private ScrollView drawer;
@@ -210,11 +211,13 @@ public class BrowserActivity extends Activity {
     private boolean edgeTracking;
     private int autoRetries;
     private boolean retryScheduled;
+    private boolean errorInThisLoad;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         themeModeAtCreate = Ui.getThemeMode(this);
+        accentAtCreate = Ui.getAccent(this);
         Ui.applyTheme(this);
         mode = getIntent().getStringExtra(EXTRA_MODE);
         if (mode == null) {
@@ -281,7 +284,7 @@ public class BrowserActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+        if (themeModeAtCreate != Ui.getThemeMode(this) || accentAtCreate != Ui.getAccent(this)) {
             recreate();
         }
     }
@@ -375,8 +378,15 @@ public class BrowserActivity extends Activity {
                 || (description != null && description.contains("ERR_ABORTED"))) {
             return;
         }
-        if (autoRetries < 3) {
+        errorInThisLoad = true;
+        if (autoRetries < 5) {
             autoRetries++;
+            if (autoRetries == 2) {
+                try {
+                    webView.clearCache(true);
+                } catch (Throwable ignored) {
+                }
+            }
             if (!retryScheduled) {
                 retryScheduled = true;
                 webView.postDelayed(new Runnable() {
@@ -782,6 +792,7 @@ public class BrowserActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                errorInThisLoad = false;
                 hideError();
                 if (showProgress) {
                     progress.setVisibility(View.VISIBLE);
@@ -792,7 +803,7 @@ public class BrowserActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
-                if (errorView == null || errorView.getVisibility() != View.VISIBLE) {
+                if (!errorInThisLoad) {
                     autoRetries = 0;
                 }
                 Web.inject(view);

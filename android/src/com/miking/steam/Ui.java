@@ -27,6 +27,13 @@ final class Ui {
     static final int THEME_DARK = 1;
     static final int THEME_LIGHT = 2;
 
+    static final int ACCENT_BLUE = 0;
+    static final int ACCENT_PURPLE = 1;
+    static final int ACCENT_GREEN = 2;
+    static final int ACCENT_ORANGE = 3;
+    static final int ACCENT_PINK = 4;
+    static final int ACCENT_DYNAMIC = 5;
+
     // Material 3 color roles, resolved from the selected theme.
     static int BG = 0xFF101418;
     static int SURFACE = 0xFF1A1F26;
@@ -66,31 +73,29 @@ final class Ui {
             SURFACE_HIGH = 0xFF242A33;
             TEXT = 0xFFE3E6EB;
             TEXT_DIM = 0xFFC2C7D0;
-            PRIMARY = 0xFF8AB4F8;
-            FAB = 0xFF2A4A78;
-            ON_FAB = 0xFFD7E3FF;
 
             MD_SURFACE = 0xFF2B2930;
             MD_SURFACE_CONTAINER = 0xFF211F26;
             MD_ON_SURFACE = 0xFFE6E1E5;
             MD_ON_VARIANT = 0xFFCAC4D0;
-            MD_PRIMARY = 0xFF8AB4F8;
         } else {
             BG = 0xFFFFFBFE;
             SURFACE = 0xFFF3EDF7;
             SURFACE_HIGH = 0xFFECE6F0;
             TEXT = 0xFF1C1B1F;
             TEXT_DIM = 0xFF49454F;
-            PRIMARY = 0xFF1A73E8;
-            FAB = 0xFF1A73E8;
-            ON_FAB = 0xFFFFFFFF;
 
             MD_SURFACE = 0xFFECE6F0;
             MD_SURFACE_CONTAINER = 0xFFF3EDF7;
             MD_ON_SURFACE = 0xFF1C1B1F;
             MD_ON_VARIANT = 0xFF49454F;
-            MD_PRIMARY = 0xFF1A73E8;
         }
+
+        int[] accent = accentColors(activity, getAccent(activity), isDark);
+        PRIMARY = accent[0];
+        FAB = accent[1];
+        ON_FAB = accent[2];
+        MD_PRIMARY = PRIMARY;
 
         activity.getWindow().setStatusBarColor(BG);
         activity.getWindow().setNavigationBarColor(BG);
@@ -133,6 +138,87 @@ final class Ui {
             return "深色";
         }
         return "跟随系统";
+    }
+
+    static int getAccent(Context context) {
+        return context.getSharedPreferences("steamgo", Context.MODE_PRIVATE)
+                .getInt("theme_accent", ACCENT_BLUE);
+    }
+
+    static void setAccent(Context context, int accent) {
+        context.getSharedPreferences("steamgo", Context.MODE_PRIVATE)
+                .edit().putInt("theme_accent", accent).apply();
+    }
+
+    static String accentName(Context context) {
+        switch (getAccent(context)) {
+            case ACCENT_PURPLE:
+                return "紫色";
+            case ACCENT_GREEN:
+                return "绿色";
+            case ACCENT_ORANGE:
+                return "橙色";
+            case ACCENT_PINK:
+                return "粉色";
+            case ACCENT_DYNAMIC:
+                return Build.VERSION.SDK_INT >= 31 ? "动态取色" : "动态取色（不可用）";
+            default:
+                return "蓝色";
+        }
+    }
+
+    static int accentSwatch(Context context, int accent) {
+        return accentColors(context, accent, dark)[0];
+    }
+
+    private static int systemColor(Context context, int resId, int fallback) {
+        try {
+            if (Build.VERSION.SDK_INT >= 31) {
+                return context.getColor(resId);
+            }
+        } catch (Throwable ignored) {
+        }
+        return fallback;
+    }
+
+    /** @return {primary, fab container, on fab} */
+    private static int[] accentColors(Context context, int accent, boolean isDark) {
+        if (accent == ACCENT_DYNAMIC && Build.VERSION.SDK_INT >= 31) {
+            if (isDark) {
+                return new int[]{
+                        systemColor(context, android.R.color.system_accent1_200, 0xFF8AB4F8),
+                        systemColor(context, android.R.color.system_accent1_700, 0xFF2A4A78),
+                        systemColor(context, android.R.color.system_accent1_100, 0xFFD7E3FF)
+                };
+            }
+            return new int[]{
+                    systemColor(context, android.R.color.system_accent1_600, 0xFF1A73E8),
+                    systemColor(context, android.R.color.system_accent1_600, 0xFF1A73E8),
+                    systemColor(context, android.R.color.system_accent1_50, 0xFFFFFFFF)
+            };
+        }
+        switch (accent) {
+            case ACCENT_PURPLE:
+                return isDark
+                        ? new int[]{0xFFD0BCFF, 0xFF4F378B, 0xFFEADDFF}
+                        : new int[]{0xFF6750A4, 0xFF6750A4, 0xFFFFFFFF};
+            case ACCENT_GREEN:
+                return isDark
+                        ? new int[]{0xFFA8DAB5, 0xFF2E5B1C, 0xFFC8F0C8}
+                        : new int[]{0xFF386A20, 0xFF386A20, 0xFFFFFFFF};
+            case ACCENT_ORANGE:
+                return isDark
+                        ? new int[]{0xFFFFB77C, 0xFF7A3A00, 0xFFFFDCC2}
+                        : new int[]{0xFFB4510A, 0xFFB4510A, 0xFFFFFFFF};
+            case ACCENT_PINK:
+                return isDark
+                        ? new int[]{0xFFFFB1C8, 0xFF8B0050, 0xFFFFD9E2}
+                        : new int[]{0xFFB90063, 0xFFB90063, 0xFFFFFFFF};
+            default:
+                return isDark
+                        ? new int[]{0xFF8AB4F8, 0xFF2A4A78, 0xFFD7E3FF}
+                        : new int[]{0xFF1A73E8, 0xFF1A73E8, 0xFFFFFFFF};
+        }
     }
 
     static int dp(Context c, float value) {

@@ -42,18 +42,21 @@ public class MainActivity extends Activity {
     private boolean drawerOpen;
     private SharedPreferences prefs;
     private int themeModeAtCreate;
+    private int accentAtCreate;
 
     private float edgeDownX;
     private float edgeDownY;
     private boolean edgeTracking;
     private int autoRetries;
     private boolean retryScheduled;
+    private boolean errorInThisLoad;
     private ConnectivityManager.NetworkCallback networkCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         themeModeAtCreate = Ui.getThemeMode(this);
+        accentAtCreate = Ui.getAccent(this);
         Ui.applyTheme(this);
         prefs = getSharedPreferences("steamgo", Context.MODE_PRIVATE);
 
@@ -98,7 +101,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+        if (themeModeAtCreate != Ui.getThemeMode(this) || accentAtCreate != Ui.getAccent(this)) {
             recreate();
         }
     }
@@ -220,6 +223,27 @@ public class MainActivity extends Activity {
         rp.topMargin = Ui.dp(this, 24);
         box.addView(retry, rp);
 
+        TextView external = Ui.text(this, "用系统浏览器打开", 14, Ui.PRIMARY);
+        external.setTypeface(Ui.medium());
+        external.setGravity(Gravity.CENTER);
+        external.setPadding(Ui.dp(this, 20), Ui.dp(this, 10), Ui.dp(this, 20), Ui.dp(this, 10));
+        external.setClickable(true);
+        Ui.applyRipple(external, this, 20);
+        external.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = webView.getUrl();
+                if (url == null || url.length() == 0) {
+                    url = Web.START;
+                }
+                Ui.openExternal(MainActivity.this, url);
+            }
+        });
+        LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ep.topMargin = Ui.dp(this, 8);
+        box.addView(external, ep);
+
         box.setVisibility(View.GONE);
         return box;
     }
@@ -245,8 +269,15 @@ public class MainActivity extends Activity {
                 || (description != null && description.contains("ERR_ABORTED"))) {
             return;
         }
-        if (autoRetries < 3) {
+        errorInThisLoad = true;
+        if (autoRetries < 5) {
             autoRetries++;
+            if (autoRetries == 2) {
+                try {
+                    webView.clearCache(true);
+                } catch (Throwable ignored) {
+                }
+            }
             if (!retryScheduled) {
                 retryScheduled = true;
                 webView.postDelayed(new Runnable() {
@@ -546,6 +577,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                errorInThisLoad = false;
                 hideError();
                 progress.setVisibility(View.VISIBLE);
                 progress.setProgress(0);
@@ -554,7 +586,7 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
-                if (errorView == null || errorView.getVisibility() != View.VISIBLE) {
+                if (!errorInThisLoad) {
                     autoRetries = 0;
                 }
                 if (url != null && url.contains("store.steampowered.com/account")) {
