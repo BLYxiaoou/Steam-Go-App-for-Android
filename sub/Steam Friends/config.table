@@ -18,6 +18,21 @@ activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGA
 \
 \
 --可移动悬浮按钮Start\
+--MD3 悬浮按钮样式 Start\
+import \"android.graphics.drawable.GradientDrawable\"\
+task(200,function()\
+  pcall(function()\
+    if fltBtn then\
+      local md3Density=this.getResources().getDisplayMetrics().density\
+      local md3Background=GradientDrawable()\
+      md3Background.setShape(GradientDrawable.RECTANGLE)\
+      md3Background.setColor(0xFF2A4A78)\
+      md3Background.setCornerRadius(math.floor(16*md3Density+0.5))\
+      fltBtn.setBackgroundDrawable(md3Background)\
+    end\
+  end)\
+end)\
+--MD3 悬浮按钮样式 End\
 local w=this.getWidth()\
 local h=this.getHeight()\
 \
@@ -156,12 +171,12 @@ if not tostring(jdpuk)==string.byte(\"\3\")..string.byte(\"\25\")..string.byte(\
 浏览器对象,网页链接=..." ;
       } ;
   ["view_attribute"]	= {
-      ["顶栏阴影强度"]	= "2dp" ;
-      ["顶栏高度"]	= "56dp" ;
-      ["搜索栏阴影强度"]	= "2dp" ;
+      ["顶栏阴影强度"]	= "0dp" ;
+      ["顶栏高度"]	= "64dp" ;
+      ["搜索栏阴影强度"]	= "0dp" ;
       ["顶栏标题"]	= "Steam 好友" ;
-      ["搜索栏圆角弧度"]	= "2dp" ;
-      ["侧滑栏宽度"]	= "240dp" ;
+      ["搜索栏圆角弧度"]	= "28dp" ;
+      ["侧滑栏宽度"]	= "280dp" ;
       } ;
   ["fltBtn"]	= {
       ["显示"]	= true ;
@@ -229,20 +244,20 @@ end)\
       ["显示状态栏"]	= true ;
       } ;
   ["colors"]	= {
-      ["顶栏部件"]	= "#ffffffff" ;
-      ["搜索栏背景"]	= "#ff373534" ;
-      ["进度条"]	= "#00000000" ;
-      ["侧滑栏列表图标"]	= "#ff757575" ;
-      ["搜索栏部件触摸"]	= "#44000000" ;
-      ["顶栏"]	= "#ff171a21" ;
-      ["导航栏"]	= "#ff171a21" ;
-      ["悬浮按钮图标"]	= "#ffffffff" ;
-      ["悬浮按钮"]	= "#ff171a21" ;
-      ["侧滑栏背景"]	= "#ffffffff" ;
-      ["顶栏部件触摸"]	= "#22ffffff" ;
-      ["侧滑栏列表文字"]	= "#ff333333" ;
-      ["搜索栏部件"]	= "#ff888888" ;
-      ["搜索栏提示文字"]	= "#ffffffff" ;
+      ["顶栏部件"]	= "#ffe3e6eb" ;
+      ["搜索栏背景"]	= "#ff242a33" ;
+      ["进度条"]	= "#ff8ab4f8" ;
+      ["侧滑栏列表图标"]	= "#ffc2c7d0" ;
+      ["搜索栏部件触摸"]	= "#33ffffff" ;
+      ["顶栏"]	= "#ff101418" ;
+      ["导航栏"]	= "#ff101418" ;
+      ["悬浮按钮图标"]	= "#ffd7e3ff" ;
+      ["悬浮按钮"]	= "#ff2a4a78" ;
+      ["侧滑栏背景"]	= "#ff1a1f26" ;
+      ["顶栏部件触摸"]	= "#33ffffff" ;
+      ["侧滑栏列表文字"]	= "#ffe3e6eb" ;
+      ["搜索栏部件"]	= "#ffc2c7d0" ;
+      ["搜索栏提示文字"]	= "#ffc2c7d0" ;
       } ;
   ["web_control"]	= {
       [2]	= {

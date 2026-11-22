@@ -1,11 +1,11 @@
 {
   ["view_attribute"]	= {
-      ["顶栏阴影强度"]	= "2dp" ;
+      ["顶栏阴影强度"]	= "0dp" ;
       ["顶栏高度"]	= "0dp" ;
-      ["侧滑栏宽度"]	= "240dp" ;
+      ["侧滑栏宽度"]	= "280dp" ;
       ["顶栏标题"]	= "Title" ;
-      ["搜索栏圆角弧度"]	= "2dp" ;
-      ["搜索栏阴影强度"]	= "2dp" ;
+      ["搜索栏圆角弧度"]	= "28dp" ;
+      ["搜索栏阴影强度"]	= "0dp" ;
       } ;
   ["events"]	= {
       ["收到新标题"]	= "--浏览器加载新页面并获得新标题时执行的事件\
@@ -40,6 +40,13 @@ import \"android.text.*\"\
 \
 \
 \
+import \"android.graphics.drawable.GradientDrawable\"\
+local md3Density=this.getResources().getDisplayMetrics().density\
+md3HeaderBackground=GradientDrawable()\
+md3HeaderBackground.setShape(GradientDrawable.RECTANGLE)\
+md3HeaderBackground.setCornerRadius(math.floor(24*md3Density+0.5))\
+md3HeaderBackground.setColor(0xFFF3EDF7)\
+\
 layout={--页面背景\
 \
   LinearLayout,\
@@ -50,7 +57,7 @@ layout={--页面背景\
 \
   orientation=\"vertical\",\
 \
-  backgroundColor=\"#FFFFFF\",\
+  backgroundColor=\"#FFFBFE\",\
 \
   {\
 \
@@ -60,7 +67,10 @@ layout={--页面背景\
 \
     layout_height=\"150dp\",\
 \
-    layout_marginTop=\"35dp\",\
+    layout_marginTop=\"24dp\",\
+    layout_marginLeft=\"16dp\",\
+    layout_marginRight=\"16dp\",\
+    background=md3HeaderBackground,\
 \
     {\
 \
@@ -72,7 +82,7 @@ layout={--页面背景\
 \
       layout_height=\"75dp\",\
 \
-      layout_marginLeft=\"45dp\",\
+      layout_marginLeft=\"24dp\",\
 \
       layout_centerVertical=true,\
 \
@@ -86,15 +96,15 @@ layout={--页面背景\
 \
       layout_toRightOf=\"logo\",\
 \
-      layout_marginLeft=\"25dp\",\
+      layout_marginLeft=\"16dp\",\
 \
       layout_centerVertical=true,\
 \
       text=Html.fromHtml(\"<b>Steam Go<br/>\\n<br/>氢量级第三方Steam App</b>\"),\
 \
-      textSize=\"15sp\",\
+      textSize=\"16sp\",\
 \
-      textColor=\"#FF000000\",\
+      textColor=\"#FF1C1B1F\",\
 \
     }\
 \
@@ -120,9 +130,9 @@ layout={--页面背景\
 \
       layout_marginTop=\"20dp\",\
 \
-      layout_marginLeft=\"60dp\",\
+      layout_marginLeft=\"24dp\",\
 \
-      layout_marginRight=\"60dp\",\
+      layout_marginRight=\"24dp\",\
 \
       dividerHeight=\"0dp\",\
 \
@@ -319,11 +329,11 @@ items={\
 \
     id=\"img\",\
 \
-    layout_margin=\"15dp\",\
+    layout_margin=\"16dp\",\
 \
-    layout_width=\"30dp\",\
+    layout_width=\"32dp\",\
 \
-    layout_height=\"30dp\",\
+    layout_height=\"32dp\",\
 \
   },\
 \
@@ -345,9 +355,9 @@ items={\
 \
       id=\"title\",\
 \
-      textColor=\"#FF000000\",\
+      textColor=\"#FF1C1B1F\",\
 \
-      textSize=\"15sp\",\
+      textSize=\"16sp\",\
 \
     },\
 \
@@ -357,9 +367,9 @@ items={\
 \
       id=\"content\",\
 \
-      textColor=\"#FF000000\",\
+      textColor=\"#FF49454F\",\
 \
-      textSize=\"12sp\",\
+      textSize=\"14sp\",\
 \
     },\
 \
@@ -565,16 +575,16 @@ function()--捐赠点击事件 Start\
         src=\"qrcode.png\";\
         layout_height=\"560\";\
         layout_marginTop=\"18\";\
-        layout_width=\"900\";\
+        layout_width=\"fill\";\
         layout_gravity=\"center_horizontal\";\
         id=\"qrcode\"\
       };\
     };\
-    AlertDialog.Builder(this)\
-    .setTitle(\"微信支付\")\
-    .setMessage(\"\\n如果你喜欢，请随意捐赠\\n\")\
-    .setView(loadlayout(AboutLayout))\
-    .setPositiveButton(\"跳转到 微信 \",{onClick=\
+    local payDialog=require(\"EMUI5Dialog\")()\
+    payDialog:setTitle(\"微信支付\")\
+    payDialog:setMessage(\"\\n如果你喜欢，请随意捐赠\\n\")\
+    payDialog:setView(loadlayout(AboutLayout))\
+    payDialog:setPositiveButton(\"跳转到 微信 \",{onClick=\
     function(v)\
       Toast.makeText(activity,\"谢谢老板！\" , Toast.LENGTH_SHORT )\
       .show()\
@@ -584,8 +594,8 @@ function()--捐赠点击事件 Start\
       manager = activity.getPackageManager()\
       open = manager.getLaunchIntentForPackage(packageName)--打开微信程式\
       this.startActivity(open)\
-    end})\
-    .show()\
+    end},0xFF22BB2D)\
+    payDialog:show()\
   end,0xFF22BB2D)\
 \
   :setPositiveButton(\"捐赠名单\",--捐赠名单 点击事件\
@@ -693,19 +703,19 @@ end" ;
       ["图标"]	= "" ;
       } ;
   ["colors"]	= {
-      ["搜索栏部件触摸"]	= "#44000000" ;
-      ["悬浮按钮"]	= "#ff171a21" ;
-      ["悬浮按钮图标"]	= "#ffffffff" ;
+      ["搜索栏部件触摸"]	= "#1f000000" ;
+      ["悬浮按钮"]	= "#ff2a4a78" ;
+      ["悬浮按钮图标"]	= "#ffd7e3ff" ;
       ["导航栏"]	= "#00000000" ;
-      ["搜索栏部件"]	= "#ff888888" ;
-      ["侧滑栏列表图标"]	= "#ff757575" ;
-      ["顶栏部件触摸"]	= "#22ffffff" ;
-      ["侧滑栏背景"]	= "#ffffffff" ;
-      ["进度条"]	= "#00000000" ;
-      ["侧滑栏列表文字"]	= "#ff333333" ;
-      ["搜索栏提示文字"]	= "#80000000" ;
-      ["顶栏"]	= "#ff171a21" ;
-      ["搜索栏背景"]	= "#ffffffff" ;
-      ["顶栏部件"]	= "#ffffffff" ;
+      ["搜索栏部件"]	= "#ff49454f" ;
+      ["侧滑栏列表图标"]	= "#ff49454f" ;
+      ["顶栏部件触摸"]	= "#1f000000" ;
+      ["侧滑栏背景"]	= "#fff7f2fa" ;
+      ["进度条"]	= "#ff1a73e8" ;
+      ["侧滑栏列表文字"]	= "#ff1c1b1f" ;
+      ["搜索栏提示文字"]	= "#ff79747e" ;
+      ["顶栏"]	= "#fffbfe" ;
+      ["搜索栏背景"]	= "#fff3edf7" ;
+      ["顶栏部件"]	= "#ff1c1b1f" ;
       } ;
   } ;

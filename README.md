@@ -20,9 +20,11 @@ Steam Go拥有完善的侧滑栏分类，简单快捷找到需要的内容，浏
 
 
 
->Material Design 2.0 .来自 Android 9.0 的全新质感设计
+>Material Design 3 .来自 Android 12 的全新质感设计
 
-Steam Go参照Android P引入了一系列的圆角设计,这包括全新设计的圆角侧滑栏,圆角对话框和全新特性.
+Steam Go已全面升级至 Material Design 3 设计语言,采用全新的色彩体系、圆角与层次规范,包括 28dp 圆角对话框、圆角侧滑栏与更符合 MD3 规范的悬浮按钮.
+
+同时也已完成 Android 12 (API 31) 及更高版本的系统适配,包括通知渠道、PendingIntent 可变性与通知权限.
 
 
 
