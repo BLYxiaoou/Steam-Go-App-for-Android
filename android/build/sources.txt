@@ -1,0 +1,7 @@
+/workspace/android/src/com/miking/steam/AboutActivity.java
+/workspace/android/src/com/miking/steam/MainActivity.java
+/workspace/android/src/com/miking/steam/Ui.java
+/workspace/android/src/com/miking/steam/Web.java
+/workspace/android/src/com/miking/steam/Md3Dialog.java
+/workspace/android/src/com/miking/steam/BrowserActivity.java
+/workspace/android/build/gen/com/miking/steam/R.java
