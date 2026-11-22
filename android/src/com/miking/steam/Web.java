@@ -10,7 +10,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 final class Web {
-    static final String START = "https://store.steampowered.com/account";
+    static final String START = "https://store.steampowered.com/";
 
     private static final String INJECT_JS =
             "(function(){try{" +
@@ -117,6 +117,15 @@ final class Web {
                 || url.contains("store.steampowered.com/account/registerkey")
                 || url.contains("store.steampowered.com/account/wishlist")
                 || url.contains("store.steampowered.com/account/cart")) {
+            BrowserActivity.openUniversal(activity, url);
+            return true;
+        }
+
+        // Steam moved the wishlist and cart to top level paths. Keep the home
+        // WebView on the store front page instead of letting it drift away.
+        if (url.contains("store.steampowered.com/wishlist")
+                || url.contains("store.steampowered.com/cart")
+                || url.contains("store.steampowered.com/points")) {
             BrowserActivity.openUniversal(activity, url);
             return true;
         }

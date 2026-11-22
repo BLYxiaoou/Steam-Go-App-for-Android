@@ -227,6 +227,9 @@ public class BrowserActivity extends Activity {
         }
 
         setContentView(root);
+        if (drawer != null) {
+            setDrawer(false, false);
+        }
         setupWebView();
         loadInitial();
     }

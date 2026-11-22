@@ -1,5 +1,5 @@
 packagename="com.miking.steam"
-appcode="250"
+appcode="262"
 --Android 12 (API 31) 及以上适配
 appsdk="31"
 user_permission={
@@ -9,4 +9,4 @@ user_permission={
   } ;
 template="tool"
 appname="Steam Go"
-appver="2.5.0"
+appver="2.6.2"

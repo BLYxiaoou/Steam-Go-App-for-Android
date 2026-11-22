@@ -75,6 +75,7 @@ public class MainActivity extends Activity {
         root.addView(drawer, drawerParams());
 
         setContentView(root);
+        setDrawer(false, false);
         root.post(new Runnable() {
             @Override
             public void run() {
@@ -454,7 +455,9 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
-                Web.inject(view);
+                if (url != null && url.contains("store.steampowered.com/account")) {
+                    Web.inject(view);
+                }
             }
 
             @Override

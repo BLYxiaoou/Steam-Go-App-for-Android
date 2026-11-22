@@ -326,27 +326,20 @@ if(网页链接:find\"https://store.steampowered.com/account/cart\")then\
   进入子页面(\"Universal UI\",{链接=网页链接})\
 end--购物车\
 \
+if(网页链接:find\"https://store.steampowered.com/wishlist\")then\
+  停止加载()\
+  进入子页面(\"Universal UI\",{链接=网页链接})\
+end--愿望单（新版路径）\
+\
+if(网页链接:find\"https://store.steampowered.com/cart\")then\
+  停止加载()\
+  进入子页面(\"Universal UI\",{链接=网页链接})\
+end--购物车（新版路径）\
+\
 if(网页链接:find\"https://steamcommunity.com/chat\")then\
   停止加载()\
   进入子页面(\"Steam Friends\")\
-end--好友页面\
-\
-if(网页链接:find\"https://store.steampowered.com/login\")then--登录判定\
-exitConfirmDialog=EMUI5Dialog()\
-:setBlurBackgroundEnable(false)\
-:setTitle(\"Steam账户未登录\")\
-:setMessage(\"Steam Go相关服务依赖Steam账户，登录以获得最佳体验\",\"#FF212121\")\
-:setPositiveButton(\"知道了\",\
-function()\
-end,0xFF1A73E8)\
-\
-:setBlurBackgroundCacheEnable(false)\
-:setOnDismissEvent(\
-function()\
-  exitConfirmDialog:setBlurBackgroundCacheEnable(false)\
-end)\
-:show()\
-end" ;
+end--好友页面" ;
       } ;
   ["sidebar"]	= {
       ["启用"]	= true ;
@@ -414,7 +407,7 @@ Toast.makeText(activity,\"该页面访问的域名位于Steam社区\\n(steamcomm
       } ;
   ["web"]	= {
       ["启用进度条"]	= false ;
-      ["启动网页"]	= "https://store.steampowered.com/account" ;
+      ["启动网页"]	= "https://store.steampowered.com/" ;
       ["启用长按菜单"]	= false ;
       ["浏览器用户标识"]	= "默认" ;
       ["网页沉浸"]	= false ;
