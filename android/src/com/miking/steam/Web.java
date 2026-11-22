@@ -39,6 +39,10 @@ final class Web {
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportMultipleWindows(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        // Present as a current mobile Chrome instead of the "wv" WebView UA,
+        // which Steam sometimes serves with a degraded layout.
+        s.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Pixel 7) "
+                + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
         webView.setBackgroundColor(Ui.BG);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.addJavascriptInterface(new Object(), "JsInterface");
@@ -74,8 +78,19 @@ final class Web {
             return true;
         }
 
+        if (!root) {
+            // Inside a browser page, let the WebView handle normal navigation.
+            // Otherwise every store app link would spawn another activity stack.
+            return false;
+        }
+
         if (url.contains("steamcommunity.com/chat")) {
             BrowserActivity.openFriends(activity);
+            return true;
+        }
+
+        if (url.contains("steamcommunity.com") || url.contains("help.steampowered.com")) {
+            BrowserActivity.openUniversal(activity, url);
             return true;
         }
 
@@ -87,12 +102,12 @@ final class Web {
             return true;
         }
 
-        if (root && url.contains("store.steampowered.com/search")) {
+        if (url.contains("store.steampowered.com/search")) {
             BrowserActivity.openUniversal(activity, url);
             return true;
         }
 
-        if (root && url.contains("store.steampowered.com/login")) {
+        if (url.contains("store.steampowered.com/login")) {
             showLoginHint(activity);
             return false;
         }

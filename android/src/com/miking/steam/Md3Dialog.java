@@ -166,7 +166,8 @@ class Md3Dialog {
             action.setMinHeight(Ui.dp(activity, 44));
             action.setClickable(true);
             GradientDrawable mask = Ui.rounded(activity, 0xFFFFFFFF, 22);
-            action.setBackground(new RippleDrawable(ColorStateList.valueOf(0x1F1C1B1F), null, mask));
+            action.setBackground(new RippleDrawable(
+                    ColorStateList.valueOf(Ui.isDark() ? 0x33FFFFFF : 0x1F1C1B1F), null, mask));
             LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             if (i > 0) {
                 bp.topMargin = Ui.dp(activity, 2);

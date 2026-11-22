@@ -14,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -32,8 +34,10 @@ public class MainActivity extends Activity {
     private ScrollView drawer;
     private WebView webView;
     private ProgressBar progress;
+    private View errorView;
     private boolean drawerOpen;
     private SharedPreferences prefs;
+    private int themeModeAtCreate;
 
     private float edgeDownX;
     private float edgeDownY;
@@ -42,9 +46,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        themeModeAtCreate = Ui.getThemeMode(this);
+        Ui.applyTheme(this);
         prefs = getSharedPreferences("steamgo", Context.MODE_PRIVATE);
-        getWindow().setNavigationBarColor(Ui.BG);
-        getWindow().setStatusBarColor(Ui.BG);
 
         root = new FrameLayout(this);
         root.setBackgroundColor(Ui.BG);
@@ -82,6 +86,14 @@ public class MainActivity extends Activity {
         webView.loadUrl(Web.START);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+            recreate();
+        }
+    }
+
     private LinearLayout buildContent() {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);
@@ -96,8 +108,68 @@ public class MainActivity extends Activity {
         column.addView(progress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 3)));
 
         webView = new WebView(this);
-        column.addView(webView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        FrameLayout webBox = new FrameLayout(this);
+        webBox.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        errorView = buildErrorView();
+        webBox.addView(errorView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        column.addView(webBox, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         return column;
+    }
+
+    private View buildErrorView() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setBackgroundColor(Ui.BG);
+        box.setPadding(Ui.dp(this, 32), Ui.dp(this, 32), Ui.dp(this, 32), Ui.dp(this, 32));
+
+        TextView title = Ui.text(this, "网页无法打开", 22, Ui.TEXT);
+        title.setTypeface(Ui.medium());
+        box.addView(title);
+
+        TextView message = Ui.text(this, "请检查网络连接后重试\n中国大陆访问 Steam 商店可能需要网络加速", 14, Ui.TEXT_DIM);
+        message.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mp.topMargin = Ui.dp(this, 12);
+        box.addView(message, mp);
+
+        TextView retry = Ui.text(this, "重试", 14, Ui.ON_FAB);
+        retry.setTypeface(Ui.medium());
+        retry.setGravity(Gravity.CENTER);
+        retry.setPadding(Ui.dp(this, 28), Ui.dp(this, 10), Ui.dp(this, 28), Ui.dp(this, 10));
+        GradientDrawable retryBg = Ui.rounded(this, Ui.FAB, 20);
+        retry.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(0x33FFFFFF), retryBg, retryBg));
+        retry.setClickable(true);
+        retry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideError();
+                webView.reload();
+            }
+        });
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rp.topMargin = Ui.dp(this, 24);
+        box.addView(retry, rp);
+
+        box.setVisibility(View.GONE);
+        return box;
+    }
+
+    private void showError() {
+        if (errorView != null) {
+            errorView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideError() {
+        if (errorView != null) {
+            errorView.setVisibility(View.GONE);
+        }
     }
 
     private LinearLayout buildToolbar() {
@@ -166,14 +238,16 @@ public class MainActivity extends Activity {
 
     private ScrollView buildDrawer() {
         ScrollView scroll = new ScrollView(this);
-        GradientDrawable bg = Ui.rounded(this, Ui.SURFACE, 16);
-        scroll.setBackground(bg);
+        scroll.setBackground(Ui.roundedRight(this, Ui.SURFACE, 16));
         scroll.setElevation(Ui.dp(this, 8));
-        scroll.setClipToOutline(false);
+        scroll.setClipToOutline(true);
 
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
-        list.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 12));
+        list.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 12));
+
+        list.addView(buildDrawerHeader());
+        list.addView(Ui.divider(this));
 
         addDrawerItem(list, R.drawable.ic_sale, "折扣优惠", new Runnable() {
             public void run() {
@@ -220,6 +294,13 @@ public class MainActivity extends Activity {
                 BrowserActivity.openUniversal(MainActivity.this, "https://store.steampowered.com/cart");
             }
         });
+
+        list.addView(Ui.divider(this));
+        addDrawerItem(list, R.drawable.ic_fltbtn, "设置", new Runnable() {
+            public void run() {
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            }
+        });
         addDrawerItem(list, R.drawable.ic_info, "关于", new Runnable() {
             public void run() {
                 startActivity(new Intent(MainActivity.this, AboutActivity.class));
@@ -228,6 +309,27 @@ public class MainActivity extends Activity {
 
         scroll.addView(list, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return scroll;
+    }
+
+    private View buildDrawerHeader() {
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.VERTICAL);
+        header.setPadding(Ui.dp(this, 24), Ui.dp(this, 16), Ui.dp(this, 24), Ui.dp(this, 16));
+
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.ic_launcher);
+        header.addView(logo, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
+
+        TextView title = Ui.text(this, "Steam Go", 22, Ui.TEXT);
+        title.setTypeface(Ui.medium());
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tp.topMargin = Ui.dp(this, 14);
+        header.addView(title, tp);
+
+        TextView subtitle = Ui.text(this, "第三方 Steam 客户端", 12, Ui.TEXT_DIM);
+        header.addView(subtitle);
+        return header;
     }
 
     private void addDrawerItem(LinearLayout list, int icon, String label, final Runnable action) {
@@ -248,11 +350,7 @@ public class MainActivity extends Activity {
     }
 
     private FrameLayout.LayoutParams drawerParams() {
-        int screenH = getResources().getDisplayMetrics().heightPixels;
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(Ui.dp(this, 280), screenH - Ui.dp(this, 96));
-        lp.leftMargin = Ui.dp(this, 8);
-        lp.topMargin = Ui.dp(this, 48);
-        return lp;
+        return new FrameLayout.LayoutParams(Ui.dp(this, 320), ViewGroup.LayoutParams.MATCH_PARENT);
     }
 
     private FrameLayout buildFab() {
@@ -266,8 +364,7 @@ public class MainActivity extends Activity {
         box.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BrowserActivity.openUniversal(MainActivity.this,
-                        "https://help.steampowered.com/zh-cn/accountdata");
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
             }
         });
         box.setOnTouchListener(new FabTouch());
@@ -343,6 +440,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                hideError();
                 progress.setVisibility(View.VISIBLE);
                 progress.setProgress(0);
             }
@@ -351,6 +449,20 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
                 Web.inject(view);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request != null && request.isForMainFrame()) {
+                    showError();
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (failingUrl != null && failingUrl.equals(view.getUrl())) {
+                    showError();
+                }
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
@@ -402,18 +514,12 @@ public class MainActivity extends Activity {
 
     private void setDrawer(boolean open, boolean animate) {
         drawerOpen = open;
-        float hidden = -(drawer.getWidth() + Ui.dp(this, 8));
-        if (drawer.getWidth() == 0) {
-            hidden = -Ui.dp(this, 288);
-        }
+        float hidden = -(drawer.getWidth() == 0 ? Ui.dp(this, 320) : drawer.getWidth());
         final float target = open ? 0f : hidden;
         if (!animate) {
             drawer.setTranslationX(target);
             scrim.setVisibility(open ? View.VISIBLE : View.GONE);
             scrim.setAlpha(open ? 1f : 0f);
-            content.setScaleX(open ? 0.92f : 1f);
-            content.setScaleY(open ? 0.92f : 1f);
-            content.setTranslationX(open ? Ui.dp(this, 8) : 0);
             return;
         }
         drawer.animate().translationX(target).setDuration(220).start();
@@ -428,14 +534,6 @@ public class MainActivity extends Activity {
                 }
             }
         }).start();
-        content.setPivotX(content.getWidth() * 0.5f);
-        content.setPivotY(content.getHeight() * 0.5f);
-        content.animate()
-                .scaleX(open ? 0.92f : 1f)
-                .scaleY(open ? 0.92f : 1f)
-                .translationX(open ? Ui.dp(this, 8) : 0)
-                .setDuration(220)
-                .start();
     }
 
     @Override

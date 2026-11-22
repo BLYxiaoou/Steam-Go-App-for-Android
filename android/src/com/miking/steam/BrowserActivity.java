@@ -15,6 +15,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -130,6 +132,17 @@ public class BrowserActivity extends Activity {
             {"关于 Steam", "https://store.steampowered.com/about"},
     };
 
+    private static final String[] STORE_CATEGORY_ICONS = {
+            "upload", "elevation_rise", "fire", "ic_money_off_black_48dp", "ic_healing_black_48dp",
+            "ic_disc_full_black_48dp", "hololens", "google_controller", "television", "nfc_tap",
+            "ic_extension_black_48dp", "football_helmet", "sword", "run", "ic_map_black_48dp",
+            "ic_graphic_eq_black_48dp", "ic_nature_people_black_48dp", "ic_motorcycle_black_48dp", "castle", "ic_face_black_48dp",
+            "ic_airline_seat_individual_suite_black_48dp", "linux", "apple", "ic_widgets_black_48dp", "printer_3d",
+            "ic_explore_black_48dp", "ic_child_care_black_48dp", "ic_games_black_48dp", "ic_photo_filter_black_48dp", "ic_photo_album_black_48dp",
+            "ic_camera_roll_black_48dp", "ic_collections_black_48dp", "ic_audiotrack_black_48dp", "hololens", "google_controller",
+            "ic_router_black_48dp", "hololens", "information",
+    };
+
     private String mode = MODE_UNIVERSAL;
     private String startUrl;
 
@@ -139,6 +152,8 @@ public class BrowserActivity extends Activity {
     private ProgressBar progress;
     private TextView titleView;
     private EditText searchView;
+    private View errorView;
+    private int themeModeAtCreate;
 
     private View scrim;
     private ScrollView drawer;
@@ -155,14 +170,13 @@ public class BrowserActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        themeModeAtCreate = Ui.getThemeMode(this);
+        Ui.applyTheme(this);
         mode = getIntent().getStringExtra(EXTRA_MODE);
         if (mode == null) {
             mode = MODE_UNIVERSAL;
         }
         startUrl = getIntent().getStringExtra(EXTRA_URL);
-
-        getWindow().setNavigationBarColor(Ui.BG);
-        getWindow().setStatusBarColor(Ui.BG);
 
         root = new FrameLayout(this);
         root.setBackgroundColor(Ui.BG);
@@ -185,7 +199,13 @@ public class BrowserActivity extends Activity {
         content.addView(progress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 3)));
 
         webView = new WebView(this);
-        content.addView(webView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        FrameLayout webBox = new FrameLayout(this);
+        webBox.addView(webView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        errorView = buildErrorView();
+        webBox.addView(errorView, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        content.addView(webBox, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         root.addView(content, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
@@ -209,6 +229,90 @@ public class BrowserActivity extends Activity {
         setContentView(root);
         setupWebView();
         loadInitial();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+            recreate();
+        }
+    }
+
+    private View buildErrorView() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setBackgroundColor(Ui.BG);
+        box.setPadding(Ui.dp(this, 32), Ui.dp(this, 32), Ui.dp(this, 32), Ui.dp(this, 32));
+
+        TextView title = Ui.text(this, "网页无法打开", 22, Ui.TEXT);
+        title.setTypeface(Ui.medium());
+        box.addView(title);
+
+        TextView message = Ui.text(this, "请检查网络连接后重试\nSteam 商店与社区在中国大陆可能需要网络加速", 14, Ui.TEXT_DIM);
+        message.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mp.topMargin = Ui.dp(this, 12);
+        box.addView(message, mp);
+
+        TextView retry = Ui.text(this, "重试", 14, Ui.ON_FAB);
+        retry.setTypeface(Ui.medium());
+        retry.setGravity(Gravity.CENTER);
+        retry.setPadding(Ui.dp(this, 28), Ui.dp(this, 10), Ui.dp(this, 28), Ui.dp(this, 10));
+        GradientDrawable retryBg = Ui.rounded(this, Ui.FAB, 20);
+        retry.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(0x33FFFFFF), retryBg, retryBg));
+        retry.setClickable(true);
+        retry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideError();
+                webView.reload();
+            }
+        });
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rp.topMargin = Ui.dp(this, 24);
+        box.addView(retry, rp);
+
+        TextView external = Ui.text(this, "用系统浏览器打开", 14, Ui.PRIMARY);
+        external.setTypeface(Ui.medium());
+        external.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 12));
+        external.setClickable(true);
+        Ui.applyRipple(external, this, 20);
+        external.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = webView.getUrl();
+                if (url == null || url.length() == 0) {
+                    url = startUrl;
+                }
+                if (url != null) {
+                    Ui.openExternal(BrowserActivity.this, url);
+                }
+            }
+        });
+        LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ep.topMargin = Ui.dp(this, 8);
+        box.addView(external, ep);
+
+        box.setVisibility(View.GONE);
+        return box;
+    }
+
+    private void showError() {
+        if (errorView != null) {
+            errorView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideError() {
+        if (errorView != null) {
+            errorView.setVisibility(View.GONE);
+        }
     }
 
     private String[][] tabsForMode() {
@@ -250,7 +354,11 @@ public class BrowserActivity extends Activity {
         bar.addView(Ui.actionButton(this, R.drawable.ic_back, Ui.TEXT, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                if (webView != null && webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    finish();
+                }
             }
         }));
 
@@ -305,10 +413,23 @@ public class BrowserActivity extends Activity {
                 }
             }));
         } else if (MODE_COMMUNITY.equals(mode) || MODE_DISCOUNTED.equals(mode) || MODE_FRIENDS.equals(mode)) {
+            bar.addView(Ui.actionButton(this, R.drawable.ic_refresh, Ui.TEXT, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    webView.reload();
+                }
+            }));
             bar.addView(Ui.actionButton(this, R.drawable.ic_dots, Ui.TEXT, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     showMoreDialog();
+                }
+            }));
+        } else {
+            bar.addView(Ui.actionButton(this, R.drawable.ic_refresh, Ui.TEXT, new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    webView.reload();
                 }
             }));
         }
@@ -373,17 +494,27 @@ public class BrowserActivity extends Activity {
 
     private ScrollView buildDrawer(String[][] items) {
         ScrollView scroll = new ScrollView(this);
-        GradientDrawable bg = Ui.rounded(this, Ui.SURFACE, 16);
-        scroll.setBackground(bg);
+        scroll.setBackground(Ui.roundedRight(this, Ui.SURFACE, 16));
         scroll.setElevation(Ui.dp(this, 8));
+        scroll.setClipToOutline(true);
 
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
-        list.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 12));
+        list.setPadding(0, Ui.dp(this, 8), 0, Ui.dp(this, 12));
+
+        TextView header = Ui.text(this, "商店分类", 18, Ui.TEXT);
+        header.setTypeface(Ui.medium());
+        header.setPadding(Ui.dp(this, 24), Ui.dp(this, 16), Ui.dp(this, 24), Ui.dp(this, 8));
+        list.addView(header);
+        list.addView(Ui.divider(this));
 
         for (int i = 0; i < items.length; i++) {
             final String url = items[i][1];
-            LinearLayout row = Ui.drawerRow(this, 0, Ui.TEXT_DIM, items[i][0], Ui.TEXT, new View.OnClickListener() {
+            int iconRes = 0;
+            if (i < STORE_CATEGORY_ICONS.length) {
+                iconRes = getResources().getIdentifier(STORE_CATEGORY_ICONS[i], "drawable", getPackageName());
+            }
+            LinearLayout row = Ui.drawerRow(this, iconRes, Ui.TEXT_DIM, items[i][0], Ui.TEXT, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     setDrawer(false, false);
@@ -399,11 +530,7 @@ public class BrowserActivity extends Activity {
     }
 
     private FrameLayout.LayoutParams drawerParams() {
-        int screenH = getResources().getDisplayMetrics().heightPixels;
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(Ui.dp(this, 280), screenH - Ui.dp(this, 96));
-        lp.leftMargin = Ui.dp(this, 8);
-        lp.topMargin = Ui.dp(this, 48);
-        return lp;
+        return new FrameLayout.LayoutParams(Ui.dp(this, 320), ViewGroup.LayoutParams.MATCH_PARENT);
     }
 
     private void submitSearch() {
@@ -535,6 +662,7 @@ public class BrowserActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                hideError();
                 if (showProgress) {
                     progress.setVisibility(View.VISIBLE);
                     progress.setProgress(0);
@@ -545,6 +673,20 @@ public class BrowserActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
                 Web.inject(view);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request != null && request.isForMainFrame()) {
+                    showError();
+                }
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                if (failingUrl != null && failingUrl.equals(view.getUrl())) {
+                    showError();
+                }
             }
         });
         webView.setWebChromeClient(new WebChromeClient() {
@@ -580,18 +722,12 @@ public class BrowserActivity extends Activity {
             return;
         }
         drawerOpen = open;
-        float hidden = -(drawer.getWidth() + Ui.dp(this, 8));
-        if (drawer.getWidth() == 0) {
-            hidden = -Ui.dp(this, 288);
-        }
+        float hidden = -(drawer.getWidth() == 0 ? Ui.dp(this, 320) : drawer.getWidth());
         final float target = open ? 0f : hidden;
         if (!animate) {
             drawer.setTranslationX(target);
             scrim.setVisibility(open ? View.VISIBLE : View.GONE);
             scrim.setAlpha(open ? 1f : 0f);
-            content.setScaleX(open ? 0.92f : 1f);
-            content.setScaleY(open ? 0.92f : 1f);
-            content.setTranslationX(open ? Ui.dp(this, 8) : 0);
             return;
         }
         drawer.animate().translationX(target).setDuration(220).start();
@@ -606,14 +742,6 @@ public class BrowserActivity extends Activity {
                 }
             }
         }).start();
-        content.setPivotX(content.getWidth() * 0.5f);
-        content.setPivotY(content.getHeight() * 0.5f);
-        content.animate()
-                .scaleX(open ? 0.92f : 1f)
-                .scaleY(open ? 0.92f : 1f)
-                .translationX(open ? Ui.dp(this, 8) : 0)
-                .setDuration(220)
-                .start();
     }
 
     @Override

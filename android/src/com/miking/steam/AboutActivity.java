@@ -30,26 +30,23 @@ public class AboutActivity extends Activity {
     private static final int WECHAT_GREEN = 0xFF22BB2D;
 
     private String version = "";
+    private int themeModeAtCreate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().setStatusBarColor(0xFFFFFBFE);
-        getWindow().setNavigationBarColor(0xFFFFFBFE);
-        try {
-            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
-        } catch (Exception ignored) {
-        }
+        themeModeAtCreate = Ui.getThemeMode(this);
+        Ui.applyTheme(this);
         try {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             version = info.versionName;
         } catch (Exception e) {
-            version = "2.5.0";
+            version = "2.6.0";
         }
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(0xFFFFFBFE);
+        root.setBackgroundColor(Ui.BG);
 
         root.addView(buildToolbar(), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 56)));
 
@@ -67,17 +64,25 @@ public class AboutActivity extends Activity {
         setContentView(root);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (themeModeAtCreate != Ui.getThemeMode(this)) {
+            recreate();
+        }
+    }
+
     private LinearLayout buildToolbar() {
         LinearLayout bar = new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
         bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setBackgroundColor(0xFFFFFBFE);
+        bar.setBackgroundColor(Ui.BG);
         bar.setPadding(Ui.dp(this, 4), 0, Ui.dp(this, 4), 0);
 
         FrameLayout back = new FrameLayout(this);
         back.setLayoutParams(new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
         back.setClickable(true);
-        Ui.applyRipple(back, this, 24, 0x1F000000);
+        Ui.applyRipple(back, this, 24);
         ImageView icon = Ui.icon(this, R.drawable.ic_back, Ui.MD_ON_SURFACE, 24);
         icon.setColorFilter(Ui.MD_ON_SURFACE);
         back.addView(icon);
@@ -173,7 +178,7 @@ public class AboutActivity extends Activity {
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 12));
         row.setClickable(true);
-        Ui.applyRipple(row, this, 16, 0x1F000000);
+        Ui.applyRipple(row, this, 16);
 
         ImageView icon = new ImageView(this);
         icon.setImageResource(iconRes);
@@ -249,8 +254,12 @@ public class AboutActivity extends Activity {
                         BrowserActivity.openUniversal(AboutActivity.this, "https://steamcommunity.com/id/975680379/");
                         toast("\u5411\u5f00\u53d1\u8005\u63cf\u8ff0\u4e00\u4e0b\u4f60\u7684\u95ee\u9898\u5427");
                     }
-                }, STEAM_DARK)
+                }, steamAccent())
                 .show();
+    }
+
+    private int steamAccent() {
+        return Ui.isDark() ? 0xFF8AB4F8 : STEAM_DARK;
     }
 
     private void showFollowDialog() {
@@ -316,7 +325,7 @@ public class AboutActivity extends Activity {
                         BrowserActivity.openUniversal(AboutActivity.this,
                                 "https://github.com/MiKing233/Steam-Go-App-for-Android/blob/master/Steam%20Go%20Donation%20list");
                     }
-                }, STEAM_DARK)
+                }, steamAccent())
                 .show();
     }
 

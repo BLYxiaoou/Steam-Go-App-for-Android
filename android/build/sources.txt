@@ -1,3 +1,4 @@
+/workspace/android/src/com/miking/steam/SettingsActivity.java
 /workspace/android/src/com/miking/steam/AboutActivity.java
 /workspace/android/src/com/miking/steam/MainActivity.java
 /workspace/android/src/com/miking/steam/Ui.java
