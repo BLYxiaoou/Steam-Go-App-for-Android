@@ -166,6 +166,8 @@ public class BrowserActivity extends Activity {
     private float edgeDownX;
     private float edgeDownY;
     private boolean edgeTracking;
+    private int autoRetries;
+    private boolean retryScheduled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -322,6 +324,29 @@ public class BrowserActivity extends Activity {
         if (errorView != null) {
             errorView.setVisibility(View.GONE);
         }
+    }
+
+    private void handleLoadError(int errorCode, String description) {
+        if (errorCode == WebViewClient.ERROR_UNKNOWN
+                || (description != null && description.contains("ERR_ABORTED"))) {
+            return;
+        }
+        if (autoRetries < 2) {
+            autoRetries++;
+            if (!retryScheduled) {
+                retryScheduled = true;
+                webView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        retryScheduled = false;
+                        hideError();
+                        webView.reload();
+                    }
+                }, 800L);
+            }
+            return;
+        }
+        showError();
     }
 
     private String[][] tabsForMode() {
@@ -681,20 +706,24 @@ public class BrowserActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
+                if (errorView == null || errorView.getVisibility() != View.VISIBLE) {
+                    autoRetries = 0;
+                }
                 Web.inject(view);
             }
 
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request != null && request.isForMainFrame()) {
-                    showError();
+                    CharSequence description = error.getDescription();
+                    handleLoadError(error.getErrorCode(), description == null ? null : description.toString());
                 }
             }
 
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(view.getUrl())) {
-                    showError();
+                    handleLoadError(errorCode, description);
                 }
             }
         });

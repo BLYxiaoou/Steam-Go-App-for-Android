@@ -42,6 +42,8 @@ public class MainActivity extends Activity {
     private float edgeDownX;
     private float edgeDownY;
     private boolean edgeTracking;
+    private int autoRetries;
+    private boolean retryScheduled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -177,6 +179,32 @@ public class MainActivity extends Activity {
         if (errorView != null) {
             errorView.setVisibility(View.GONE);
         }
+    }
+
+    private void handleLoadError(int errorCode, String description) {
+        // Steam redirects the store front with JavaScript. The superseded
+        // load is reported as ERR_ABORTED / ERROR_UNKNOWN even though the
+        // redirected page is loading fine, so never treat it as a failure.
+        if (errorCode == WebViewClient.ERROR_UNKNOWN
+                || (description != null && description.contains("ERR_ABORTED"))) {
+            return;
+        }
+        if (autoRetries < 2) {
+            autoRetries++;
+            if (!retryScheduled) {
+                retryScheduled = true;
+                webView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        retryScheduled = false;
+                        hideError();
+                        webView.reload();
+                    }
+                }, 800L);
+            }
+            return;
+        }
+        showError();
     }
 
     private LinearLayout buildToolbar() {
@@ -455,6 +483,9 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 progress.setVisibility(View.GONE);
+                if (errorView == null || errorView.getVisibility() != View.VISIBLE) {
+                    autoRetries = 0;
+                }
                 if (url != null && url.contains("store.steampowered.com/account")) {
                     Web.inject(view);
                 }
@@ -463,14 +494,15 @@ public class MainActivity extends Activity {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 if (request != null && request.isForMainFrame()) {
-                    showError();
+                    CharSequence description = error.getDescription();
+                    handleLoadError(error.getErrorCode(), description == null ? null : description.toString());
                 }
             }
 
             @Override
             public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                 if (failingUrl != null && failingUrl.equals(view.getUrl())) {
-                    showError();
+                    handleLoadError(errorCode, description);
                 }
             }
         });
