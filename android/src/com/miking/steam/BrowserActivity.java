@@ -203,7 +203,6 @@ public class BrowserActivity extends Activity {
     private boolean drawerOpen;
 
     private String[][] tabs;
-    private final java.util.List<View> tabIndicators = new java.util.ArrayList<View>();
     private final java.util.List<TextView> tabLabels = new java.util.ArrayList<TextView>();
 
     private float edgeDownX;
@@ -456,20 +455,11 @@ public class BrowserActivity extends Activity {
             }
         }));
 
-        if (MODE_WORKSHOP.equals(mode)) {
-            bar.addView(Ui.actionButton(this, R.drawable.ic_menu, Ui.TEXT, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    setDrawer(!drawerOpen);
-                }
-            }));
-        }
-
         if (MODE_STORE.equals(mode) || MODE_WORKSHOP.equals(mode)) {
             searchView = new EditText(this);
             searchView.setHint(MODE_WORKSHOP.equals(mode) ? "\u641c\u7d22\u521b\u610f\u5de5\u574a" : "\u641c\u7d22\u5546\u5e97");
             searchView.setTextSize(14);
-            searchView.setTextColor(Ui.TEXT_DIM);
+            searchView.setTextColor(Ui.TEXT);
             searchView.setHintTextColor(0xFF79747E);
             searchView.setSingleLine(true);
             searchView.setInputType(InputType.TYPE_CLASS_TEXT);
@@ -542,46 +532,81 @@ public class BrowserActivity extends Activity {
     private View buildTabs(String[][] items) {
         HorizontalScrollView scroll = new HorizontalScrollView(this);
         scroll.setHorizontalScrollBarEnabled(false);
+        scroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         scroll.setBackgroundColor(Ui.BG);
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(Ui.dp(this, 12), 0, Ui.dp(this, 12), 0);
+
+        tabLabels.clear();
+
+        if (MODE_WORKSHOP.equals(mode)) {
+            TextView games = tabChip("\u6e38\u620f\u5de5\u574a \u25BE", false);
+            games.setTextColor(Ui.TEXT);
+            games.setBackground(new android.graphics.drawable.RippleDrawable(
+                    android.content.res.ColorStateList.valueOf(rippleColor()),
+                    Ui.rounded(this, Ui.SURFACE_HIGH, 17),
+                    Ui.rounded(this, Ui.SURFACE_HIGH, 17)));
+            games.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setDrawer(true);
+                }
+            });
+            row.addView(games);
+        }
 
         for (int i = 0; i < items.length; i++) {
             final int index = i;
-            LinearLayout tab = new LinearLayout(this);
-            tab.setOrientation(LinearLayout.VERTICAL);
-            tab.setGravity(Gravity.CENTER);
-            tab.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), 0);
-
-            TextView label = Ui.text(this, items[i][0], 14, Ui.TEXT);
-            tab.addView(label, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 0, 1f));
-
-            View indicator = new View(this);
-            indicator.setBackgroundColor(i == 0 ? Ui.PRIMARY : 0x00000000);
-            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 3));
-            tab.addView(indicator, ip);
-
-            tabLabels.add(label);
-            tabIndicators.add(indicator);
-            tab.setClickable(true);
-            tab.setOnClickListener(new View.OnClickListener() {
+            TextView chip = tabChip(items[i][0], i == 0);
+            if (i == 0) {
+                chip.setTypeface(Ui.medium());
+            }
+            tabLabels.add(chip);
+            chip.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     selectTab(index, true);
                 }
             });
-            row.addView(tab, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 48)));
+            row.addView(chip);
         }
-        scroll.addView(row, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        scroll.addView(row, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
         return scroll;
     }
 
+    private TextView tabChip(String text, boolean selected) {
+        TextView chip = Ui.text(this, text, 13, selected ? Ui.ON_FAB : Ui.TEXT_DIM);
+        chip.setSingleLine(true);
+        chip.setGravity(Gravity.CENTER);
+        chip.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), 0);
+        chip.setClickable(true);
+        styleTabChip(chip, selected);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 34));
+        lp.rightMargin = Ui.dp(this, 8);
+        chip.setLayoutParams(lp);
+        return chip;
+    }
+
+    private int rippleColor() {
+        return Ui.isDark() ? 0x33FFFFFF : 0x1F000000;
+    }
+
+    private void styleTabChip(TextView chip, boolean selected) {
+        chip.setTextColor(selected ? Ui.ON_FAB : Ui.TEXT_DIM);
+        GradientDrawable bg = Ui.rounded(this, selected ? Ui.FAB : Ui.SURFACE_HIGH, 17);
+        chip.setBackground(new android.graphics.drawable.RippleDrawable(
+                android.content.res.ColorStateList.valueOf(rippleColor()), bg, bg));
+        chip.setTypeface(selected ? Ui.medium() : android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL));
+    }
+
     private void selectTab(int index, boolean load) {
-        for (int i = 0; i < tabIndicators.size(); i++) {
-            tabIndicators.get(i).setBackgroundColor(i == index ? Ui.PRIMARY : 0x00000000);
-            tabLabels.get(i).setTextColor(i == index ? Ui.TEXT : Ui.TEXT_DIM);
+        for (int i = 0; i < tabLabels.size(); i++) {
+            styleTabChip(tabLabels.get(i), i == index);
         }
         if (load && tabs != null && index >= 0 && index < tabs.length) {
             webView.loadUrl(Ui.encodeUrl(tabs[index][1]));
@@ -589,9 +614,8 @@ public class BrowserActivity extends Activity {
     }
 
     private void clearTabSelection() {
-        for (int i = 0; i < tabIndicators.size(); i++) {
-            tabIndicators.get(i).setBackgroundColor(0x00000000);
-            tabLabels.get(i).setTextColor(Ui.TEXT_DIM);
+        for (int i = 0; i < tabLabels.size(); i++) {
+            styleTabChip(tabLabels.get(i), false);
         }
     }
 
