@@ -3,7 +3,9 @@ package com.miking.steam;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.view.View;
+import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -43,9 +45,26 @@ final class Web {
         // which Steam sometimes serves with a degraded layout.
         s.setUserAgentString("Mozilla/5.0 (Linux; Android 13; Pixel 7) "
                 + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36");
+
+        // Steam login posts to login.steampowered.com and reads cookies from
+        // both that host and store.steampowered.com. Without third-party
+        // cookies the sign-in silently fails and loops back to the login page.
+        CookieManager cookies = CookieManager.getInstance();
+        cookies.setAcceptCookie(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookies.setAcceptThirdPartyCookies(webView, true);
+        }
+
         webView.setBackgroundColor(Ui.BG);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
         webView.addJavascriptInterface(new Object(), "JsInterface");
+    }
+
+    static void persistCookies() {
+        try {
+            CookieManager.getInstance().flush();
+        } catch (Exception ignored) {
+        }
     }
 
     static void inject(WebView webView) {
@@ -107,20 +126,7 @@ final class Web {
             return true;
         }
 
-        if (url.contains("store.steampowered.com/login")) {
-            showLoginHint(activity);
-            return false;
-        }
-
         return false;
-    }
-
-    static void showLoginHint(final Activity activity) {
-        new Md3Dialog(activity)
-                .setTitle("Steam账户未登录")
-                .setMessage("Steam Go相关服务依赖Steam账户，登录以获得最佳体验")
-                .setPositiveButton("知道了", null, Ui.MD_PRIMARY)
-                .show();
     }
 
     static void openUrl(Activity activity, String url) {

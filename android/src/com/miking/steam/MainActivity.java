@@ -94,6 +94,12 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Web.persistCookies();
+    }
+
     private LinearLayout buildContent() {
         LinearLayout column = new LinearLayout(this);
         column.setOrientation(LinearLayout.VERTICAL);

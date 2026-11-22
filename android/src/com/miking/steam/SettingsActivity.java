@@ -187,7 +187,7 @@ public class SettingsActivity extends Activity {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             return info.versionName;
         } catch (Exception e) {
-            return "2.6.0";
+            return "2.6.1";
         }
     }
 }

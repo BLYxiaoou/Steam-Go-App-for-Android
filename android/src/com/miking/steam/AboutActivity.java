@@ -41,7 +41,7 @@ public class AboutActivity extends Activity {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             version = info.versionName;
         } catch (Exception e) {
-            version = "2.6.0";
+            version = "2.6.1";
         }
 
         LinearLayout root = new LinearLayout(this);

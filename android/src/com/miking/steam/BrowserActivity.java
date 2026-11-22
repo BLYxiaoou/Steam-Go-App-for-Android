@@ -239,6 +239,12 @@ public class BrowserActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Web.persistCookies();
+    }
+
     private View buildErrorView() {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
