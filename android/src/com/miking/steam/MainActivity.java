@@ -103,7 +103,9 @@ public class MainActivity extends Activity {
         super.onResume();
         if (themeModeAtCreate != Ui.getThemeMode(this) || accentAtCreate != Ui.getAccent(this)) {
             recreate();
+            return;
         }
+        Web.applyZoom(webView);
     }
 
     @Override

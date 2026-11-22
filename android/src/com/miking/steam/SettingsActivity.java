@@ -48,6 +48,15 @@ public class SettingsActivity extends Activity {
                 showThemeDialog();
             }
         });
+        addRow(R.drawable.ic_zoom, "网页缩放", Ui.getWebZoom(this) + "%", new Runnable() {
+            public void run() {
+                Web.showZoomDialog(SettingsActivity.this, null, new Runnable() {
+                    public void run() {
+                        recreate();
+                    }
+                });
+            }
+        });
         addColorChips();
 
         addSection("数据");

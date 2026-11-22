@@ -1,24 +1,40 @@
 package com.miking.steam;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.webkit.CookieManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 final class Web {
     static final String START = "https://store.steampowered.com/";
 
+    private static final int[] ZOOM_STEPS = {90, 100, 110, 125, 150};
+
     private static final String INJECT_JS =
             "(function(){try{" +
-            "var sels=['.responsive_header','.responsive_page_menu_ctn mainmenu','#store_nav_area','.continue_shopping_ctn'];" +
+            "var sels=['.responsive_header','.responsive_page_menu_ctn mainmenu','#store_nav_area'," +
+            "'.continue_shopping_ctn','#global_header','.responsive_page_header'];" +
             "for(var i=0;i<sels.length;i++){var n=document.querySelectorAll(sels[i]);" +
             "for(var j=0;j<n.length;j++){n[j].style.display='none';}}" +
             "var c=document.getElementsByClassName('responsive_page_content');" +
             "if(c&&c.length){c[0].style.paddingTop='0px';}" +
+            "var m=document.querySelector('meta[name=viewport]');" +
+            "if(!m){m=document.createElement('meta');m.setAttribute('name','viewport');document.head.appendChild(m);}" +
+            "m.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=4, user-scalable=yes');" +
+            "if(!document.getElementById('steamgo_css')){var st=document.createElement('style');st.id='steamgo_css';" +
+            "st.innerHTML='html,body{overflow-x:hidden!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}" +
+            "img,video,iframe{max-width:100%!important}';document.head.appendChild(st);}" +
             "}catch(e){}})();";
 
     static final String CHAT_JS =
@@ -36,8 +52,9 @@ final class Web {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setSupportZoom(true);
-        s.setBuiltInZoomControls(false);
+        s.setBuiltInZoomControls(true);
         s.setDisplayZoomControls(false);
+        s.setTextZoom(Ui.getWebZoom(webView.getContext()));
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setSupportMultipleWindows(false);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -71,6 +88,72 @@ final class Web {
         try {
             webView.evaluateJavascript(INJECT_JS, null);
         } catch (Exception ignored) {
+        }
+    }
+
+    static void showZoomDialog(final Activity activity, final WebView webView) {
+        showZoomDialog(activity, webView, null);
+    }
+
+    static void showZoomDialog(final Activity activity, final WebView webView, final Runnable onChanged) {
+        final Dialog dialog = new Dialog(activity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        LinearLayout box = new LinearLayout(activity);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setBackground(Ui.rounded(activity, Ui.MD_SURFACE, 28));
+        box.setPadding(0, Ui.dp(activity, 12), 0, Ui.dp(activity, 12));
+
+        TextView title = Ui.text(activity, "网页缩放", 20, Ui.MD_ON_SURFACE);
+        title.setTypeface(Ui.medium());
+        title.setPadding(Ui.dp(activity, 24), Ui.dp(activity, 8),
+                Ui.dp(activity, 24), Ui.dp(activity, 4));
+        box.addView(title);
+
+        TextView hint = Ui.text(activity, "也可以直接在网页上双指捏合缩放", 12, Ui.MD_ON_VARIANT);
+        hint.setPadding(Ui.dp(activity, 24), 0, Ui.dp(activity, 24), Ui.dp(activity, 8));
+        box.addView(hint);
+
+        int current = Ui.getWebZoom(activity);
+        for (final int step : ZOOM_STEPS) {
+            boolean on = step == current;
+            TextView row = Ui.text(activity, step + "%", 15, on ? Ui.MD_PRIMARY : Ui.MD_ON_SURFACE);
+            if (on) {
+                row.setTypeface(Ui.medium());
+            }
+            row.setPadding(Ui.dp(activity, 32), Ui.dp(activity, 13),
+                    Ui.dp(activity, 24), Ui.dp(activity, 13));
+            row.setClickable(true);
+            Ui.applyRipple(row, activity, 12);
+            row.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Ui.setWebZoom(activity, step);
+                    if (webView != null) {
+                        webView.getSettings().setTextZoom(step);
+                    }
+                    dialog.dismiss();
+                    if (onChanged != null) {
+                        onChanged.run();
+                    }
+                }
+            });
+            box.addView(row);
+        }
+
+        dialog.setContentView(box);
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(0));
+            window.setGravity(Gravity.BOTTOM);
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+    }
+
+    static void applyZoom(WebView webView) {
+        if (webView != null) {
+            webView.getSettings().setTextZoom(Ui.getWebZoom(webView.getContext()));
         }
     }
 

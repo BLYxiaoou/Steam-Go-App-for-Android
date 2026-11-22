@@ -150,6 +150,16 @@ final class Ui {
                 .edit().putInt("theme_accent", accent).apply();
     }
 
+    static int getWebZoom(Context context) {
+        return context.getSharedPreferences("steamgo", Context.MODE_PRIVATE)
+                .getInt("web_zoom", 100);
+    }
+
+    static void setWebZoom(Context context, int zoom) {
+        context.getSharedPreferences("steamgo", Context.MODE_PRIVATE)
+                .edit().putInt("web_zoom", zoom).apply();
+    }
+
     static String accentName(Context context) {
         switch (getAccent(context)) {
             case ACCENT_PURPLE:
