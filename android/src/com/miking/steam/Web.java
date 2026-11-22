@@ -250,7 +250,16 @@ final class Web {
             if (url.startsWith("javascript:")) {
                 return true;
             }
-            if (url.startsWith("intent:") || url.contains("://")) {
+            String lower = url.toLowerCase(java.util.Locale.US);
+            // With a mobile user agent Steam tries to hand off to the official
+            // Steam app through steam:// links and intent:// URIs. Inside this
+            // client that hand-off throws the user out of the app as soon as a
+            // page opens, so swallow it and keep browsing here.
+            if (lower.startsWith("steam://") || lower.startsWith("intent:")
+                    || lower.contains("scheme=steam") || lower.contains("package=com.valvesoftware")) {
+                return true;
+            }
+            if (url.contains("://")) {
                 Ui.openExternal(activity, url);
                 return true;
             }
