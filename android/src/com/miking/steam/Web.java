@@ -30,12 +30,6 @@ final class Web {
             "for(var j=0;j<n.length;j++){n[j].style.display='none';}}" +
             "var c=document.getElementsByClassName('responsive_page_content');" +
             "if(c&&c.length){c[0].style.paddingTop='0px';}" +
-            "var m=document.querySelector('meta[name=viewport]');" +
-            "if(!m){m=document.createElement('meta');m.setAttribute('name','viewport');document.head.appendChild(m);}" +
-            "m.setAttribute('content','width=device-width, initial-scale=1, maximum-scale=4, user-scalable=yes');" +
-            "if(!document.getElementById('steamgo_css')){var st=document.createElement('style');st.id='steamgo_css';" +
-            "st.innerHTML='html,body{overflow-x:hidden!important;-webkit-text-size-adjust:100%!important;text-size-adjust:100%!important}" +
-            "img,video,iframe{max-width:100%!important}';document.head.appendChild(st);}" +
             "}catch(e){}})();";
 
     static final String CHAT_JS =
@@ -71,6 +65,14 @@ final class Web {
         cookies.setAcceptCookie(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookies.setAcceptThirdPartyCookies(webView, true);
+        }
+        // Steam stores a "use desktop site" preference in this cookie. A stale
+        // value makes the community/workshop pages render their 980px desktop
+        // layout inside the WebView even with a mobile user agent.
+        try {
+            cookies.setCookie("https://steamcommunity.com/", "mobileClient=mobile; path=/");
+            cookies.setCookie("https://store.steampowered.com/", "mobileClient=mobile; path=/");
+        } catch (Exception ignored) {
         }
 
         webView.setBackgroundColor(Ui.BG);
