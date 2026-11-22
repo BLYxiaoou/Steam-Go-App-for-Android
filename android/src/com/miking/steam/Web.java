@@ -66,14 +66,10 @@ final class Web {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookies.setAcceptThirdPartyCookies(webView, true);
         }
-        // Steam stores a "use desktop site" preference in this cookie. A stale
+        // Steam stores a "use desktop site" preference in a cookie. A stale
         // value makes the community/workshop pages render their 980px desktop
         // layout inside the WebView even with a mobile user agent.
-        try {
-            cookies.setCookie("https://steamcommunity.com/", "mobileClient=mobile; path=/");
-            cookies.setCookie("https://store.steampowered.com/", "mobileClient=mobile; path=/");
-        } catch (Exception ignored) {
-        }
+        forceMobileLayout(cookies);
 
         webView.setBackgroundColor(Ui.BG);
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
@@ -84,6 +80,84 @@ final class Web {
         try {
             CookieManager.getInstance().flush();
         } catch (Exception ignored) {
+        }
+    }
+
+    private static final String[][] MOBILE_HOSTS = {
+            {"https://steamcommunity.com/", ".steamcommunity.com"},
+            {"https://store.steampowered.com/", ".steampowered.com"},
+    };
+
+    /**
+     * Clears any leftover "desktop site" preference and asks Steam for the
+     * mobile templates. The preference may live in a host-only cookie or in a
+     * domain cookie, so both variants are expired before being written.
+     */
+    private static void forceMobileLayout(CookieManager cookies) {
+        for (String[] host : MOBILE_HOSTS) {
+            String url = host[0];
+            String domain = host[1];
+            try {
+                String all = cookies.getCookie(url);
+                if (all != null) {
+                    for (String part : all.split(";")) {
+                        int eq = part.indexOf('=');
+                        if (eq <= 0) {
+                            continue;
+                        }
+                        String name = part.substring(0, eq).trim();
+                        String value = part.substring(eq + 1).trim();
+                        if (name.isEmpty()) {
+                            continue;
+                        }
+                        if (!"desktop".equalsIgnoreCase(value) && !"full".equalsIgnoreCase(value)) {
+                            continue;
+                        }
+                        cookies.setCookie(url, name + "=; Max-Age=0; path=/");
+                        cookies.setCookie(url, name + "=; Max-Age=0; path=/; domain=" + domain);
+                    }
+                }
+                cookies.setCookie(url, "mobileClient=mobile; Max-Age=31536000; path=/; domain=" + domain);
+                cookies.setCookie(url, "mobileClient=mobile; Max-Age=31536000; path=/");
+            } catch (Exception ignored) {
+            }
+        }
+        persistCookies();
+    }
+
+    static void showPageInfo(final Activity activity, final WebView webView) {
+        final String head = "URL\n" + webView.getUrl()
+                + "\n\nUA\n" + webView.getSettings().getUserAgentString()
+                + "\n\nCOOKIE\n" + CookieManager.getInstance().getCookie(webView.getUrl())
+                + "\n\n";
+        try {
+            webView.evaluateJavascript(
+                    "(function(){try{var m=document.querySelector('meta[name=viewport]');" +
+                    "return 'innerWidth='+window.innerWidth+'\\nclientWidth='+document.documentElement.clientWidth" +
+                    "+'\\nmetaViewport='+(m?m.content:'none')" +
+                    "+'\\nuaDataMobile='+(navigator.userAgentData?navigator.userAgentData.mobile:'n/a');" +
+                    "}catch(e){return 'err '+e;}})()",
+                    new android.webkit.ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            String info = value == null ? "" : value;
+                            if (info.length() > 1 && info.startsWith("\"") && info.endsWith("\"")) {
+                                info = info.substring(1, info.length() - 1);
+                            }
+                            info = info.replace("\\n", "\n").replace("\\\"", "\"");
+                            new Md3Dialog(activity)
+                                    .setTitle("\u7f51\u9875\u4fe1\u606f")
+                                    .setMessage(head + info)
+                                    .setPositiveButton("\u5173\u95ed", null)
+                                    .show();
+                        }
+                    });
+        } catch (Exception e) {
+            new Md3Dialog(activity)
+                    .setTitle("\u7f51\u9875\u4fe1\u606f")
+                    .setMessage(head)
+                    .setPositiveButton("\u5173\u95ed", null)
+                    .show();
         }
     }
 

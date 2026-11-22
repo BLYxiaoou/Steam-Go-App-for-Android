@@ -719,10 +719,10 @@ public class BrowserActivity extends Activity {
                                     current == null ? "https://steamcommunity.com/workshop/" : current);
                         }
                     })
-                    .setPositiveButton("\u5237\u65b0", new Md3Dialog.Action() {
+                    .setPositiveButton("\u7f51\u9875\u4fe1\u606f", new Md3Dialog.Action() {
                         @Override
                         public void run() {
-                            webView.reload();
+                            Web.showPageInfo(BrowserActivity.this, webView);
                         }
                     })
                     .show();
@@ -736,7 +736,29 @@ public class BrowserActivity extends Activity {
                     })
                     .show();
         } else {
-            return;
+            dialog.setTitle("\u9875\u9762\u9009\u9879")
+                    .setNegativeButton("\u5728\u6d4f\u89c8\u5668\u4e2d\u6253\u5f00", new Md3Dialog.Action() {
+                        @Override
+                        public void run() {
+                            String current = webView.getUrl();
+                            if (current != null) {
+                                Ui.openExternal(BrowserActivity.this, current);
+                            }
+                        }
+                    })
+                    .setNeutralButton("\u5237\u65b0", new Md3Dialog.Action() {
+                        @Override
+                        public void run() {
+                            webView.reload();
+                        }
+                    })
+                    .setPositiveButton("\u7f51\u9875\u4fe1\u606f", new Md3Dialog.Action() {
+                        @Override
+                        public void run() {
+                            Web.showPageInfo(BrowserActivity.this, webView);
+                        }
+                    })
+                    .show();
         }
     }
 
