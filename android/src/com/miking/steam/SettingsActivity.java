@@ -156,7 +156,9 @@ public class SettingsActivity extends Activity {
     private void addColorChips() {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(Ui.dp(this, 24), Ui.dp(this, 2), Ui.dp(this, 16), Ui.dp(this, 10));
+        box.setPadding(Ui.dp(this, 24), Ui.dp(this, 4), Ui.dp(this, 16), Ui.dp(this, 12));
+        box.setClipChildren(false);
+        box.setClipToPadding(false);
 
         TextView label = Ui.text(this, "强调色 · " + Ui.accentName(this), 14, Ui.TEXT_DIM);
         box.addView(label);
@@ -164,6 +166,9 @@ public class SettingsActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 2));
+        row.setClipChildren(false);
+        row.setClipToPadding(false);
 
         for (final int accent : ACCENTS) {
             boolean selected = Ui.getAccent(this) == accent;
@@ -179,13 +184,12 @@ public class SettingsActivity extends Activity {
                 bg.setStroke(Ui.dp(this, 1), 0x33000000);
             }
             chip.setBackground(new android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(0x33FFFFFF), bg, bg));
+                    android.content.res.ColorStateList.valueOf(0x33FFFFFF), bg, null));
             chip.setClickable(true);
             chip.setAlpha(unavailable ? 0.35f : 1f);
 
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
-            lp.rightMargin = Ui.dp(this, 12);
-            lp.topMargin = Ui.dp(this, 12);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 42), Ui.dp(this, 42));
+            lp.rightMargin = Ui.dp(this, 10);
             chip.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
