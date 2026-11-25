@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -460,15 +461,17 @@ public class BrowserActivity extends Activity {
         if (MODE_STORE.equals(mode) || MODE_WORKSHOP.equals(mode)) {
             searchView = new EditText(this);
             searchView.setHint(MODE_WORKSHOP.equals(mode) ? "\u641c\u7d22\u521b\u610f\u5de5\u574a" : "\u641c\u7d22\u5546\u5e97");
-            searchView.setTextSize(14);
+            Ui.applyType(searchView, Ui.BODY_LARGE, false, 0f, 24f);
+            searchView.setGravity(Gravity.CENTER_VERTICAL);
             searchView.setTextColor(Ui.TEXT);
-            searchView.setHintTextColor(0xFF79747E);
+            searchView.setHintTextColor(Ui.TEXT_DIM);
             searchView.setSingleLine(true);
             searchView.setInputType(InputType.TYPE_CLASS_TEXT);
             searchView.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
-            searchView.setBackground(Ui.rounded(this, Ui.SURFACE_HIGH, 28));
+            searchView.setBackground(Ui.outlined(this,
+                    Ui.isDark() ? Ui.SURFACE_CONTAINER : Ui.SURFACE, Ui.OUTLINE_VARIANT, Ui.SHAPE_XL));
             searchView.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), 0);
-            LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1f);
+            LinearLayout.LayoutParams sp = new LinearLayout.LayoutParams(0, Ui.dp(this, 56), 1f);
             sp.leftMargin = Ui.dp(this, 4);
             sp.rightMargin = Ui.dp(this, 4);
             bar.addView(searchView, sp);
@@ -485,8 +488,8 @@ public class BrowserActivity extends Activity {
                 }
             });
         } else {
-            titleView = Ui.text(this, titleForMode(), 20, Ui.TEXT);
-            titleView.setTypeface(Ui.medium());
+            titleView = Ui.text(this, titleForMode(), Ui.TITLE_LARGE, Ui.TEXT);
+            Ui.titleLarge(titleView);
             titleView.setSingleLine(true);
             titleView.setEllipsize(android.text.TextUtils.TruncateAt.END);
             LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
@@ -546,11 +549,6 @@ public class BrowserActivity extends Activity {
 
         if (MODE_WORKSHOP.equals(mode)) {
             TextView games = tabChip("\u6e38\u620f\u5de5\u574a \u25BE", false);
-            games.setTextColor(Ui.TEXT);
-            games.setBackground(new android.graphics.drawable.RippleDrawable(
-                    android.content.res.ColorStateList.valueOf(rippleColor()),
-                    Ui.rounded(this, Ui.SURFACE_HIGH, 17),
-                    Ui.rounded(this, Ui.SURFACE_HIGH, 17)));
             games.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -563,9 +561,6 @@ public class BrowserActivity extends Activity {
         for (int i = 0; i < items.length; i++) {
             final int index = i;
             TextView chip = tabChip(items[i][0], i == 0);
-            if (i == 0) {
-                chip.setTypeface(Ui.medium());
-            }
             tabLabels.add(chip);
             chip.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -581,14 +576,15 @@ public class BrowserActivity extends Activity {
     }
 
     private TextView tabChip(String text, boolean selected) {
-        TextView chip = Ui.text(this, text, 13, selected ? Ui.ON_FAB : Ui.TEXT_DIM);
+        TextView chip = Ui.text(this, text, Ui.LABEL_LARGE,
+                selected ? Ui.ON_SECONDARY_CONTAINER : Ui.TEXT_DIM);
         chip.setSingleLine(true);
         chip.setGravity(Gravity.CENTER);
         chip.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), 0);
         chip.setClickable(true);
         styleTabChip(chip, selected);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 34));
+                ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 32));
         lp.rightMargin = Ui.dp(this, 8);
         chip.setLayoutParams(lp);
         return chip;
@@ -599,11 +595,14 @@ public class BrowserActivity extends Activity {
     }
 
     private void styleTabChip(TextView chip, boolean selected) {
-        chip.setTextColor(selected ? Ui.ON_FAB : Ui.TEXT_DIM);
-        GradientDrawable bg = Ui.rounded(this, selected ? Ui.FAB : Ui.SURFACE_HIGH, 17);
+        Ui.labelLarge(chip);
+        chip.setTextColor(selected ? Ui.ON_SECONDARY_CONTAINER : Ui.TEXT_DIM);
+        GradientDrawable content = selected
+                ? Ui.rounded(this, Ui.SECONDARY_CONTAINER, Ui.SHAPE_S)
+                : Ui.outlined(this, Color.TRANSPARENT, Ui.OUTLINE_VARIANT, Ui.SHAPE_S);
+        GradientDrawable mask = Ui.rounded(this, 0xFFFFFFFF, Ui.SHAPE_S);
         chip.setBackground(new android.graphics.drawable.RippleDrawable(
-                android.content.res.ColorStateList.valueOf(rippleColor()), bg, bg));
-        chip.setTypeface(selected ? Ui.medium() : android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.NORMAL));
+                android.content.res.ColorStateList.valueOf(rippleColor()), content, mask));
     }
 
     private void selectTab(int index, boolean load) {

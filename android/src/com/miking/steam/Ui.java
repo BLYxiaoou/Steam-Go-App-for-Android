@@ -35,11 +35,18 @@ final class Ui {
     static final int ACCENT_DYNAMIC = 5;
 
     // Material 3 color roles, resolved from the selected theme.
-    static int BG = 0xFF101418;
-    static int SURFACE = 0xFF1A1F26;
-    static int SURFACE_HIGH = 0xFF242A33;
-    static int TEXT = 0xFFE3E6EB;
-    static int TEXT_DIM = 0xFFC2C7D0;
+    static int BG = 0xFF141218;                    // surface
+    static int SURFACE = 0xFF1D1B20;               // surfaceContainerLow
+    static int SURFACE_HIGH = 0xFF2B2930;          // surfaceContainerHigh
+    static int TEXT = 0xFFE6E0E9;                  // onSurface
+    static int TEXT_DIM = 0xFFCAC4D0;              // onSurfaceVariant
+    static int OUTLINE = 0xFF938F99;
+    static int OUTLINE_VARIANT = 0xFF49454F;
+    static int SURFACE_CONTAINER = 0xFF211F26;
+    static int SURFACE_CONTAINER_HIGHEST = 0xFF36343B;
+    static int SECONDARY_CONTAINER = 0xFF004A77;
+    static int ON_SECONDARY_CONTAINER = 0xFFC2E7FF;
+    static int ERROR = 0xFFF2B8B5;
     static int PRIMARY = 0xFF8AB4F8;
     static int FAB = 0xFF2A4A78;
     static int ON_FAB = 0xFFD7E3FF;
@@ -49,6 +56,22 @@ final class Ui {
     static int MD_ON_SURFACE = 0xFFE6E1E5;
     static int MD_ON_VARIANT = 0xFFCAC4D0;
     static int MD_PRIMARY = 0xFF8AB4F8;
+
+    // MD3 baseline type scale (sp).
+    static final float TITLE_LARGE = 22f;
+    static final float TITLE_MEDIUM = 16f;
+    static final float TITLE_SMALL = 14f;
+    static final float BODY_LARGE = 16f;
+    static final float BODY_MEDIUM = 14f;
+    static final float LABEL_LARGE = 14f;
+    static final float LABEL_MEDIUM = 12f;
+
+    // MD3 shape scale (dp corner radius).
+    static final float SHAPE_XS = 4f;
+    static final float SHAPE_S = 8f;
+    static final float SHAPE_M = 12f;
+    static final float SHAPE_L = 16f;
+    static final float SHAPE_XL = 28f;
 
     private static boolean dark = true;
 
@@ -68,22 +91,32 @@ final class Ui {
         }
         dark = isDark;
         if (isDark) {
-            BG = 0xFF101418;
-            SURFACE = 0xFF1A1F26;
-            SURFACE_HIGH = 0xFF242A33;
-            TEXT = 0xFFE3E6EB;
-            TEXT_DIM = 0xFFC2C7D0;
+            BG = 0xFF141218;
+            SURFACE = 0xFF1D1B20;
+            SURFACE_HIGH = 0xFF2B2930;
+            TEXT = 0xFFE6E0E9;
+            TEXT_DIM = 0xFFCAC4D0;
+            OUTLINE = 0xFF938F99;
+            OUTLINE_VARIANT = 0xFF49454F;
+            SURFACE_CONTAINER = 0xFF211F26;
+            SURFACE_CONTAINER_HIGHEST = 0xFF36343B;
+            ERROR = 0xFFF2B8B5;
 
             MD_SURFACE = 0xFF2B2930;
             MD_SURFACE_CONTAINER = 0xFF211F26;
             MD_ON_SURFACE = 0xFFE6E1E5;
             MD_ON_VARIANT = 0xFFCAC4D0;
         } else {
-            BG = 0xFFFFFBFE;
-            SURFACE = 0xFFF3EDF7;
+            BG = 0xFFFEF7FF;
+            SURFACE = 0xFFF7F2FA;
             SURFACE_HIGH = 0xFFECE6F0;
             TEXT = 0xFF1C1B1F;
             TEXT_DIM = 0xFF49454F;
+            OUTLINE = 0xFF79747E;
+            OUTLINE_VARIANT = 0xFFCAC4D0;
+            SURFACE_CONTAINER = 0xFFF3EDF7;
+            SURFACE_CONTAINER_HIGHEST = 0xFFE6E0E9;
+            ERROR = 0xFFB3261E;
 
             MD_SURFACE = 0xFFECE6F0;
             MD_SURFACE_CONTAINER = 0xFFF3EDF7;
@@ -96,6 +129,10 @@ final class Ui {
         FAB = accent[1];
         ON_FAB = accent[2];
         MD_PRIMARY = PRIMARY;
+
+        int[] secondary = secondaryColors(activity, getAccent(activity), isDark);
+        SECONDARY_CONTAINER = secondary[0];
+        ON_SECONDARY_CONTAINER = secondary[1];
 
         activity.getWindow().setStatusBarColor(BG);
         activity.getWindow().setNavigationBarColor(BG);
@@ -231,6 +268,44 @@ final class Ui {
         }
     }
 
+    /** @return {secondary container, on secondary container} */
+    private static int[] secondaryColors(Context context, int accent, boolean isDark) {
+        if (accent == ACCENT_DYNAMIC && Build.VERSION.SDK_INT >= 31) {
+            if (isDark) {
+                return new int[]{
+                        systemColor(context, android.R.color.system_accent1_700, 0xFF004A77),
+                        systemColor(context, android.R.color.system_accent1_100, 0xFFC2E7FF)
+                };
+            }
+            return new int[]{
+                    systemColor(context, android.R.color.system_accent1_100, 0xFFD1E4FF),
+                    systemColor(context, android.R.color.system_accent1_800, 0xFF001D36)
+            };
+        }
+        switch (accent) {
+            case ACCENT_PURPLE:
+                return isDark
+                        ? new int[]{0xFF4A4458, 0xFFE8DEF8}
+                        : new int[]{0xFFE8DEF8, 0xFF1D192B};
+            case ACCENT_GREEN:
+                return isDark
+                        ? new int[]{0xFF3A4D2E, 0xFFCDEBC0}
+                        : new int[]{0xFFD9EFCB, 0xFF15220B};
+            case ACCENT_ORANGE:
+                return isDark
+                        ? new int[]{0xFF5C3F1E, 0xFFFFDCBE}
+                        : new int[]{0xFFFFDCC2, 0xFF2D1600};
+            case ACCENT_PINK:
+                return isDark
+                        ? new int[]{0xFF633B48, 0xFFFFD9E2}
+                        : new int[]{0xFFFFD9E2, 0xFF3E001D};
+            default:
+                return isDark
+                        ? new int[]{0xFF004A77, 0xFFC2E7FF}
+                        : new int[]{0xFFD1E4FF, 0xFF001D36};
+        }
+    }
+
     static int dp(Context c, float value) {
         return (int) (value * c.getResources().getDisplayMetrics().density + 0.5f);
     }
@@ -251,6 +326,42 @@ final class Ui {
         float r = dp(c, radiusDp);
         d.setCornerRadii(new float[]{0, 0, r, r, r, r, 0, 0});
         return d;
+    }
+
+    static GradientDrawable outlined(Context c, int fillColor, int strokeColor, float radiusDp) {
+        GradientDrawable d = rounded(c, fillColor, radiusDp);
+        d.setStroke(Math.max(1, dp(c, 1)), strokeColor);
+        return d;
+    }
+
+    /** Applies an MD3 type-scale entry to a TextView. */
+    static void applyType(TextView t, float sizeSp, boolean mediumWeight, float letterSpacingSp,
+                          float lineHeightSp) {
+        Context c = t.getContext();
+        t.setTextSize(sizeSp);
+        t.setTypeface(mediumWeight
+                ? medium()
+                : Typeface.create("sans-serif", Typeface.NORMAL));
+        if (sizeSp > 0) {
+            t.setLetterSpacing(letterSpacingSp / sizeSp);
+        }
+        t.setLineSpacing(dp(c, lineHeightSp - sizeSp), 1f);
+    }
+
+    static void titleLarge(TextView t) {
+        applyType(t, TITLE_LARGE, false, 0f, 28f);
+    }
+
+    static void titleMedium(TextView t) {
+        applyType(t, TITLE_MEDIUM, true, 0.15f, 24f);
+    }
+
+    static void bodyMedium(TextView t) {
+        applyType(t, BODY_MEDIUM, false, 0.25f, 20f);
+    }
+
+    static void labelLarge(TextView t) {
+        applyType(t, LABEL_LARGE, true, 0.1f, 20f);
     }
 
     static void applyRipple(View view, Context c, float radiusDp) {
@@ -293,9 +404,9 @@ final class Ui {
 
     static View divider(Context c) {
         View v = new View(c);
-        v.setBackgroundColor(dark ? 0x22FFFFFF : 0x1F000000);
+        v.setBackgroundColor(OUTLINE_VARIANT);
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(c, 0.5f)));
+                ViewGroup.LayoutParams.MATCH_PARENT, Math.max(1, dp(c, 1)));
         p.leftMargin = dp(c, 16);
         p.rightMargin = dp(c, 16);
         v.setLayoutParams(p);
@@ -347,20 +458,24 @@ final class Ui {
         LinearLayout row = new LinearLayout(c);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(dp(c, 24), 0, dp(c, 16), 0);
-        row.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(c, 52)));
+        row.setPadding(dp(c, 16), 0, dp(c, 16), 0);
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(c, 56));
+        rowParams.leftMargin = dp(c, 12);
+        rowParams.rightMargin = dp(c, 12);
+        row.setLayoutParams(rowParams);
         row.setClickable(true);
-        applyRipple(row, c, 26);
+        applyRipple(row, c, SHAPE_M);
         if (iconRes != 0) {
             ImageView iv = new ImageView(c);
             iv.setImageResource(iconRes);
             iv.setColorFilter(tint, PorterDuff.Mode.SRC_IN);
             LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(c, 24), dp(c, 24));
-            ip.rightMargin = dp(c, 16);
+            ip.rightMargin = dp(c, 12);
             row.addView(iv, ip);
         }
-        TextView tv = text(c, label, 14, textColor);
+        TextView tv = text(c, label, LABEL_LARGE, textColor);
+        labelLarge(tv);
         tv.setSingleLine(true);
         row.addView(tv, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         row.setOnClickListener(listener);

@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -114,24 +115,24 @@ class Md3Dialog {
     private void buildContent() {
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(Ui.dp(activity, 24), Ui.dp(activity, 24), Ui.dp(activity, 24), Ui.dp(activity, 16));
+        root.setPadding(Ui.dp(activity, 24), Ui.dp(activity, 24), Ui.dp(activity, 24), Ui.dp(activity, 24));
 
         GradientDrawable background = new GradientDrawable();
         background.setShape(GradientDrawable.RECTANGLE);
         background.setColor(Ui.MD_SURFACE);
-        background.setCornerRadius(Ui.dp(activity, 28));
+        background.setCornerRadius(Ui.dp(activity, Ui.SHAPE_XL));
         root.setBackground(background);
         root.setElevation(Ui.dp(activity, 6));
 
         if (title != null && title.length() > 0) {
             TextView titleView = Ui.text(activity, title, 24, Ui.MD_ON_SURFACE);
-            titleView.setTypeface(Ui.medium());
+            Ui.applyType(titleView, 24f, false, 0f, 32f);
             root.addView(titleView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
 
         if (message != null && message.length() > 0) {
-            TextView messageView = Ui.text(activity, message, 14, messageColor);
-            messageView.setLineSpacing(0, 1.3f);
+            TextView messageView = Ui.text(activity, message, Ui.BODY_MEDIUM, messageColor);
+            Ui.bodyMedium(messageView);
             LinearLayout.LayoutParams mp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             mp.topMargin = Ui.dp(activity, 16);
             if (message.length() > 260) {
@@ -160,19 +161,23 @@ class Md3Dialog {
 
         for (int i = 0; i < buttons.size(); i++) {
             final Button spec = buttons.get(i);
-            TextView action = Ui.text(activity, spec.text, 14, spec.color);
+            FrameLayout touchBox = new FrameLayout(activity);
+            touchBox.setClickable(true);
+            touchBox.setFocusable(true);
+
+            TextView action = Ui.text(activity, spec.text, Ui.LABEL_LARGE, spec.color);
+            Ui.labelLarge(action);
             action.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-            action.setPadding(Ui.dp(activity, 16), Ui.dp(activity, 10), Ui.dp(activity, 16), Ui.dp(activity, 10));
-            action.setMinHeight(Ui.dp(activity, 44));
-            action.setClickable(true);
-            GradientDrawable mask = Ui.rounded(activity, 0xFFFFFFFF, 22);
+            action.setPadding(Ui.dp(activity, 12), 0, Ui.dp(activity, 12), 0);
+            action.setMinWidth(Ui.dp(activity, 64));
+            GradientDrawable mask = Ui.rounded(activity, 0xFFFFFFFF, 20);
             action.setBackground(new RippleDrawable(
                     ColorStateList.valueOf(Ui.isDark() ? 0x33FFFFFF : 0x1F1C1B1F), null, mask));
-            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (i > 0) {
-                bp.topMargin = Ui.dp(activity, 2);
-            }
-            action.setOnClickListener(new View.OnClickListener() {
+            FrameLayout.LayoutParams fp = new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(activity, 40), Gravity.CENTER_VERTICAL);
+            touchBox.addView(action, fp);
+
+            touchBox.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dismiss();
@@ -181,7 +186,12 @@ class Md3Dialog {
                     }
                 }
             });
-            actions.addView(action, bp);
+            LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(activity, 48));
+            if (i > 0) {
+                bp.topMargin = Ui.dp(activity, 8);
+            }
+            actions.addView(touchBox, bp);
         }
 
         dialog.setContentView(root);
